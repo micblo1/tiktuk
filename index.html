@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>תִּקְתּוּק - Hebrew Conjugation Practice</title>
+<style>
+    /* VARIABLES & GLOBAL STYLES */
+    :root{--bg1:#0ea5e9;--bg2:#0b76d1;--accent:#14b8a6;--card:#f3f9fb;--error-bg:#ffebeb;}
+    html,body{height:100%;margin:0;font-family:Inter, Arial, Helvetica, sans-serif;direction:ltr;background-color: var(--bg1);} 
+    body{
+        background: var(--bg1);
+        display:flex;align-items:center;justify-content:center;padding:30px;
+    } 
+    /* GAME LAYOUT */
+    .game-wrap{width:1200px;display:flex;gap:24px;align-items:flex-start;}
+    .score{width:220px;background:linear-gradient(180deg,#17d3ba,#13c6a6);border-radius:18px;padding:28px;color:#fff;box-shadow:0 6px 0 rgba(0,0,0,0.06);}
+    .score .timer{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px}
+    .score .big{font-size:56px;font-weight:800;margin-top:18px;}
+    .card{flex:1;background:var(--card);border-radius:36px;padding:28px 40px;position:relative;box-shadow:0 6px 0 rgba(0,0,0,0.06);min-height:420px;}
+    .card .header{display:flex;align-items:center;gap:18px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.05);}
+    .badge{background:#e6f8fb;color:#08a5b3;padding:8px 16px;border-radius:16px;font-weight:700;font-size:14px;}
+    .mascot{width:96px;height:96px;background:#fff;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:48px;}
+    h1{margin:0;font-size:46px;letter-spacing:0.5px;}
+    .prompt{margin:30px 0 6px;font-size:24px;color:#333;text-align:center;}
+    .inf{font-size:30px;margin-top:6px;text-align:center;font-weight:700;cursor: help;}
+    .input-row{display:flex;justify-content:center;margin-top:26px;gap:12px;align-items:center;}
+    input[type=text]{padding:12px 14px;border:0;border-bottom:2px solid rgba(0,0,0,0.08);font-size:22px;background:transparent;width:520px;text-align:center;direction:rtl;}
+    button{padding:12px 18px;border-radius:10px;border:0;background:#bbb;color:#fff;font-weight:700;box-shadow:0 4px 0 rgba(0,0,0,0.08);cursor:pointer;transition:transform 0.1s, box-shadow 0.1s;}
+    button:active {transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.08);}
+    button.primary{background:#14b8a6;}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:20px;}
+    .small{font-size:14px;color:#6b7280;}
+    .footer{position:absolute;right:28px;bottom:22px;font-size:14px;color:#6b7280;}
+    .result{margin-top:18px;text-align:center;font-weight:700;font-size:18px;}
+    .top-controls{display:flex;gap:12px;align-items:center;margin-left:auto;flex-wrap: wrap;}
+    label.checkbox{display:flex;align-items:center;gap:8px;background:#fff;padding:6px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.04);cursor:pointer;user-select: none;}
+    select{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);}
+    .hint{color:#0b76d1;font-weight:700;cursor:pointer;text-decoration:underline;}
+
+    /* TOOLTIP STYLES */
+    .tooltip-container {
+        position: relative;
+        display: block; /* Use block to center the .inf div correctly */
+        text-align: center;
+    }
+    .tooltip-text {
+        visibility: hidden;
+        width: 180px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%; /* Position above the text */
+        left: 50%;
+        margin-left: -90px; /* Use half of the width to center */
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 14px;
+        font-weight: 500;
+        pointer-events: none; /* So it doesn't interfere with hovering */
+    }
+    .tooltip-container:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+    .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+    }
+
+    /* GAME OVER MODAL STYLES */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.7); /* Darkened background */
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+    }
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    .modal-content {
+        background: var(--card); 
+        border-radius: 24px;
+        width: 600px; 
+        max-height: 90vh; 
+        overflow-y: auto;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        transform: scale(0.95);
+        transition: transform 0.3s ease-out;
+    }
+    .modal-overlay.active .modal-content {
+        transform: scale(1);
+    }
+    .modal-header {
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+    .modal-header h2 {
+        font-size: 32px; color: #333; margin: 0 0 5px;
+    }
+    .modal-summary-grid {
+        display: flex; justify-content: space-around; gap: 10px; margin-bottom: 20px;
+    }
+    .stat-box {
+        background: #fff; border-radius: 12px; padding: 10px; flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .stat-box strong {
+        display: block;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--bg2);
+        margin-top: 4px;
+    }
+    .stat-box.accuracy strong { color: var(--accent); }
+
+    .modal-error-list {
+        text-align: left;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    #errorListHeader {
+        font-weight: 700; color: crimson; margin-bottom: 10px;
+        font-size: 18px;
+    }
+    .error-item {
+        padding: 10px;
+        margin-bottom: 10px;
+        background: var(--error-bg); 
+        border-radius: 8px;
+        border-left: 5px solid crimson;
+        font-size: 16px;
+        direction: rtl;
+        line-height: 1.5;
+    }
+    .error-item strong {
+        color: #333;
+        font-weight: 800;
+        font-size: 18px;
+    }
+    .error-item span {
+        font-size: 12px;
+        color: #555;
+        display: block;
+        margin-bottom: 4px;
+        direction: ltr; /* keep meta data LTR */
+    }
+
+    /* STARTUP MENU SPECIFIC STYLES */
+    #startupMenu {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    #startupMenu h1 {
+        font-size: 60px;
+        font-weight: 800;
+        color: var(--bg2);
+        margin-bottom: 20px;
+        direction: rtl;
+        letter-spacing: -2px;
+    }
+    #startupMenu p {
+        font-size: 18px;
+        color: #555;
+        margin-bottom: 30px;
+    }
+    #startupMenu .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    #startupMenu .setting-group {
+        background: #e0e7ff;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid #c3d0f5;
+    }
+    #startupMenu .setting-group h3 {
+        margin-top: 0;
+        color: #2e4370;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    #startupMenu .setting-group label.checkbox {
+        background: #fff;
+        margin-bottom: 5px;
+    }
+    #startupMenu .options-row {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    #startupMenu .options-row .option-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    #startupMenu .options-row label {
+        font-size: 14px;
+        color: #4a5568;
+        margin-bottom: 5px;
+    }
+    #startupMenu select {
+        width: 100%;
+        min-width: 120px;
+    }
+    #startupMenu button {
+        margin-top: 30px;
+        padding: 15px 40px;
+        font-size: 20px;
+        border-radius: 15px;
+    }
+
+    /* Hide the default start button, as it's now in the menu */
+    #startBtn.game-active {
+        display: none;
+    }
+    .card .top-controls {
+        display: none; /* Hide top controls once game starts, as they're in startup menu */
+    }
+    .game-content-container {
+        display: none; /* Controlled by JS */
+    }
+
+    /* Show header during game */
+    .game-active .card .header {
+        display: flex;
+    }
+
+</style>
+</head>
+<body>
+<div class="game-wrap">
+    <div class="score">
+        <div class="timer">⏱️ <span id="timerDisplay">5:00</span></div>
+        <div class="big" id="scoreDisplay">0%</div>
+        <div style="font-size:20px;margin-top:6px" id="countDisp">0 / 0</div>
+        <button id="endGameBtn" style="width:100%; margin-top: 15px; background: #c64213; display:none;">End Now</button>
+        <div style="margin-top:18px;font-size:13px" id="gameTip"></div>
+    </div>
+
+    <div class="card">
+        
+
+<div id="startupMenu">
+            <h1 dir="rtl">תִּקְתּוּק</h1>
+            <p>Master Hebrew verb conjugations!</p>
+
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <h3>Select Binyanim:</h3>
+                    <label class="checkbox"><input type="checkbox" class="binyanCheckbox" value="paal" checked> Pa'al</label>
+                    <label class="checkbox"><input type="checkbox" class="binyanCheckbox" value="nifal" checked> Nif'al</label>
+                    <label class="checkbox"><input type="checkbox" class="binyanCheckbox" value="piel" checked> Pi'el</label>
+                    <label class="checkbox"><input type="checkbox" class="binyanCheckbox" value="pual" checked> Pu'al</label>
+                    <label class="checkbox"><input type="checkbox" class="binyanCheckbox" value="hifil" checked> Hif'il</label>
+                    <label class="checkbox"><input type="checkbox" class="binyanCheckbox" value="hufal" checked> Huf'al</label>
+                    <label class="checkbox"><input type="checkbox" class="binyanCheckbox" value="hitpael" checked> Hitpa'el</label>
+                </div>
+
+                <div class="setting-group">
+                    <h3>Game Options:</h3>
+                    <div class="options-row">
+                        <div class="option-item">
+                            <label for="timeSelect">Time Limit:</label>
+                            <select id="timeSelect">
+                                <option value="300">5:00</option>
+                                <option value="180">3:00</option>
+                                <option value="600">10:00</option>
+                                <option value="0">Unlimited</option>
+                            </select>
+                        </div>
+                        <div class="option-item">
+                            <label for="qCount">Questions:</label>
+                            <select id="qCount">
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="0">Unlimited</option>
+                            </select>
+                        </div>
+                        <div class="option-item">
+                            <label for="tenseSelect">Tense:</label>
+                            <select id="tenseSelect">
+                                <option value="past">Past</option>
+                                <option value="present">Present</option>
+                                <option value="future">Future</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="startGameFromMenuBtn" class="primary">Start Game</button>
+        </div>
+
+        
+
+<div id="gameContent" class="game-content-container">
+            <div class="header">
+                <div class="badge">Binyanim & Tense Practice</div>
+                <div style="flex:1"></div>
+                <div class="mascot">🇮🇱</div> 
+
+</div>
+            
+            <div class="prompt" id="instruction"></div>
+            
+            <div class="tooltip-container">
+                <div class="inf" id="infinitiveDisplay">—</div>
+                <span class="tooltip-text" id="infinitiveTooltip"></span>
+            </div>
+            <div class="prompt" id="pronounDisplay" style="font-weight:700; direction: rtl;">—</div>
+
+            <div class="input-row">
+                <input id="answerInput" type="text" autocomplete="off" placeholder="Type your answer in Hebrew..." disabled>
+                <button id="checkBtn">Check</button>
+                <button id="skipBtn">Skip</button>
+            </div>
+
+            <div class="controls">
+                <div class="small">Active Binyanim: <span id="binyanList">Pa'al • Nif'al • Pi'el • Pu'al • Hif'il • Huf'al • Hitpa'el</span></div>
+                <div class="small">Streak: <span id="correctStreak">0</span></div>
+                <div class="small hint" id="showHint">Hint</div>
+            </div>
+
+            <div class="result" id="resultArea"></div>
+        </div>
+        
+
+        <div class="footer"></div>
+    </div>
+</div>
+
+
+<div id="gameOverModalOverlay" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🎉 Game Over!</h2>
+            <p id="finalMsg" style="margin:0; color:#6b7280;">Great work! Here's how you did:</p>
+        </div>
+        
+        <div class="modal-summary-grid">
+            <div class="stat-box accuracy">Accuracy <strong><span id="finalAccuracy">0% (0/0)</span></strong></div>
+            <div class="stat-box">Correct <strong><span id="finalCorrect">0</span></strong></div>
+            <div class="stat-box">Incorrect <strong><span id="finalIncorrect">0</span></strong></div>
+            <div class="stat-box">Max Streak <strong><span id="finalStreak">0</span></strong></div>
+        </div>
+
+        <div class="modal-error-list">
+            <h3 id="errorListHeader">Reviewing Incorrect Attempts:</h3>
+            <div id="errorList">
+                
+
+</div>
+        </div>
+
+        <div class="modal-actions">
+            <button id="restartBtn" class="primary" style="width: 100%; padding: 15px 0; font-size: 18px;">
+                Restart Game
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// =================================================================================
+// DATA STRUCTURE (UPDATED with more verbs and English translations)
+// =================================================================================
+const DATA = {
+    paal: [
+        {inf: "לכתוב", en: "to write", past:{ani:["כתבתי"],ata:["כתבת"],at:["כתבת"],hu:["כתב"],hi:["כתבה"],anachnu:["כתבנו"],atem:["כתבתם"],aten:["כתבתן"],hem:["כתבו"],hen:["כתבו"]},
+            present: {ani: ["כותב"], ata: ["כותב"], at: ["כותבת"], hu: ["כותב"], hi: ["כותבת"], anachnu: ["כותבים"], atem: ["כותבים"], aten: ["כותבות"], hem: ["כותבים"], hen: ["כותבות"]},
+            future: {ani: ["אכתוב"], ata: ["תכתוב"], at: ["תכתבי"], hu: ["יכתוב"], hi: ["תכתוב"], anachnu: ["נכתוב"], atem: ["תכתבו"], aten: ["תכתבו"], hem: ["יכתבו"], hen: ["תכתובנה"]}},
+        {inf: "לאכול", en: "to eat", past:{ani:["אכלתי"],ata:["אכלת"],at:["אכלת"],hu:["אכל"],hi:["אכלה"],anachnu:["אכלנו"],atem:["אכלתם"],aten:["אכלתן"],hem:["אכלו"],hen:["אכלו"]},
+            present: {ani: ["אוכל"], ata: ["אוכל"], at: ["אוכלת"], hu: ["אוכל"], hi: ["אוכלת"], anachnu: ["אוכלים"], atem: ["אוכלים"], aten: ["אוכלות"], hem: ["אוכלים"], hen: ["אוכלות"]},
+            future: {ani: ["אוכל"], ata: ["תאכל"], at: ["תאכלי"], hu: ["יאכל"], hi: ["תאכל"], anachnu: ["נאכל"], atem: ["תאכלו"], aten: ["תאכלו"], hem: ["יאכלו"], hen: ["תאכלנה"]}},
+        {inf: "ללמוד", en: "to learn/study", past:{ani:["למדתי"],ata:["למדת"],at:["למדת"],hu:["למד"],hi:["למדה"],anachnu:["למדנו"],atem:["למדתם"],aten:["למדתן"],hem:["למדו"],hen:["למדו"]},
+            present: {ani: ["לומד"], ata: ["לומד"], at: ["לומדת"], hu: ["לומד"], hi: ["לומדת"], anachnu: ["לומדים"], atem: ["לומדים"], aten: ["לומדות"], hem: ["לומדים"], hen: ["לומדות"]},
+            future: {ani: ["אלמד"], ata: ["תלמד"], at: ["תלמדי"], hu: ["ילמד"], hi: ["תלמד"], anachnu: ["נלמד"], atem: ["תלמדו"], aten: ["תלמדו"], hem: ["ילמדו"], hen: ["תלמודנה"]}},
+        {inf: "לשבת", en: "to sit", past:{ani:["ישבתי"],ata:["ישבת"],at:["ישבת"],hu:["ישב"],hi:["ישבה"],anachnu:["ישבנו"],atem:["ישבתם"],aten:["ישבתן"],hem:["ישבו"],hen:["ישבו"]},
+            present: {ani: ["יושב"], ata: ["יושב"], at: ["יושבת"], hu: ["יושב"], hi: ["יושבת"], anachnu: ["יושבים"], atem: ["יושבים"], aten: ["יושבות"], hem: ["יושבים"], hen: ["יושבות"]},
+            future: {ani: ["אשב"], ata: ["תשב"], at: ["תשבי"], hu: ["ישב"], hi: ["תשב"], anachnu: ["נשב"], atem: ["תשבו"], aten: ["תשבו"], hem: ["ישבו"], hen: ["תשבנה"]}},
+        {inf: "לקחת", en: "to take", past:{ani:["לקחתי"],ata:["לקחת"],at:["לקחת"],hu:["לקח"],hi:["לקחה"],anachnu:["לקחנו"],atem:["לקחתם"],aten:["לקחתן"],hem:["לקחו"],hen:["לקחו"]}, 
+            present: {ani: ["לוקח"], ata: ["לוקח"], at: ["לוקחת"], hu: ["לוקח"], hi: ["לוקחת"], anachnu: ["לוקחים"], atem: ["לוקחים"], aten: ["לוקחות"], hem: ["לוקחים"], hen: ["לוקחות"]},
+            future: {ani: ["אקח"], ata: ["תיקח"], at: ["תיקחי"], hu: ["ייקח"], hi: ["תיקח"], anachnu: ["ניקח"], atem: ["תיקחו"], aten: ["תיקחו"], hem: ["ייקחו"], hen: ["תיקחנה"]}},
+        {inf: "לשתות", en: "to drink", past:{ani:["שתיתי"],ata:["שתית"],at:["שתית"],hu:["שתה"],hi:["שתתה"],anachnu:["שתינו"],atem:["שתיתם"],aten:["שתיתן"],hem:["שתו"],hen:["שתו"]},
+            present: {ani: ["שותה"], ata: ["שותה"], at: ["שותה"], hu: ["שותה"], hi: ["שותה"], anachnu: ["שותים"], atem: ["שותים"], aten: ["שותות"], hem: ["שותים"], hen: ["שותות"]},
+            future: {ani: ["אשתה"], ata: ["תשתה"], at: ["תשתי"], hu: ["ישתה"], hi: ["תשתה"], anachnu: ["נשתה"], atem: ["תשתו"], aten: ["תשתו"], hem: ["ישתו"], hen: ["תשתנה"]}},
+        {inf: "ללכת", en: "to go/walk", past:{ani:["הלכתי"],ata:["הלכת"],at:["הלכת"],hu:["הלך"],hi:["הלכה"],anachnu:["הלכנו"],atem:["הלכתם"],aten:["הלכתן"],hem:["הלכו"],hen:["הלכו"]},
+            present: {ani: ["הולך"], ata: ["הולך"], at: ["הולכת"], hu: ["הולך"], hi: ["הולכת"], anachnu: ["הולכים"], atem: ["הולכים"], aten: ["הולכות"], hem: ["הולכים"], hen: ["הולכות"]},
+            future: {ani: ["אלך"], ata: ["תלך"], at: ["תלכי"], hu: ["ילך"], hi: ["תלך"], anachnu: ["נלך"], atem: ["תלכו"], aten: ["תלכו"], hem: ["ילכו"], hen: ["תלכנה"]}},
+        {inf: "לחשוב", en: "to think", past:{ani:["חשבתי"],ata:["חשבת"],at:["חשבת"],hu:["חשב"],hi:["חשבה"],anachnu:["חשבנו"],atem:["חשבתם"],aten:["חשבתן"],hem:["חשבו"],hen:["חשבו"]},
+            present: {ani: ["חושב"], ata: ["חושב"], at: ["חושבת"], hu: ["חושב"], hi: ["חושבת"], anachnu: ["חושבים"], atem: ["חושבים"], aten: ["חושבות"], hem: ["חושבים"], hen: ["חושבות"]},
+            future: {ani: ["אחשוב"], ata: ["תחשוב"], at: ["תחשבי"], hu: ["יחשוב"], hi: ["תחשוב"], anachnu: ["נחשוב"], atem: ["תחשבו"], aten: ["תחשבו"], hem: ["יחשבו"], hen: ["תחשובנה"]}},
+        {inf: "לקרוא", en: "to read / to call", past:{ani:["קראתי"],ata:["קראת"],at:["קראת"],hu:["קרא"],hi:["קראה"],anachnu:["קראנו"],atem:["קראתם"],aten:["קראתן"],hem:["קראו"],hen:["קראו"]},
+            present: {ani: ["קורא"], ata: ["קורא"], at: ["קוראת"], hu: ["קורא"], hi: ["קוראת"], anachnu: ["קוראים"], atem: ["קוראים"], aten: ["קוראות"], hem: ["קוראים"], hen: ["קוראות"]},
+            future: {ani: ["אקרא"], ata: ["תקרא"], at: ["תקראי"], hu: ["יקרא"], hi: ["תקרא"], anachnu: ["נקרא"], atem: ["תקראו"], aten: ["תקראו"], hem: ["יקראו"], hen: ["תקראנה"]}},
+        {inf: "לדעת", en: "to know", past:{ani:["ידעתי"],ata:["ידעת"],at:["ידעת"],hu:["ידע"],hi:["ידעה"],anachnu:["ידענו"],atem:["ידעתם"],aten:["ידעתן"],hem:["ידעו"],hen:["ידעו"]},
+            present: {ani: ["יודע"], ata: ["יודע"], at: ["יודעת"], hu: ["יודע"], hi: ["יודעת"], anachnu: ["יודעים"], atem: ["יודעים"], aten: ["יודעות"], hem: ["יודעים"], hen: ["יודעות"]},
+            future: {ani: ["אדע"], ata: ["תדע"], at: ["תדעי"], hu: ["ידע"], hi: ["תדע"], anachnu: ["נדע"], atem: ["תדעו"], aten: ["תדעו"], hem: ["ידעו"], hen: ["תדענה"]}},
+        {inf: "לומר", en: "to say", past:{ani:["אמרתי"],ata:["אמרת"],at:["אמרת"],hu:["אמר"],hi:["אמרה"],anachnu:["אמרנו"],atem:["אמרתם"],aten:["אמרתן"],hem:["אמרו"],hen:["אמרו"]},
+            present: {ani: ["אומר"], ata: ["אומר"], at: ["אומרת"], hu: ["אומר"], hi: ["אומרת"], anachnu: ["אומרים"], atem: ["אומרים"], aten: ["אומרות"], hem: ["אומרים"], hen: ["אומרות"]},
+            future: {ani: ["אומר"], ata: ["תאמר"], at: ["תאמרי"], hu: ["יאמר"], hi: ["תאמר"], anachnu: ["נאמר"], atem: ["תאמרו"], aten: ["תאמרו"], hem: ["יאמרו"], hen: ["תאמרנה"]}},
+        {inf: "לתת", en: "to give", past:{ani:["נתתי"],ata:["נתת"],at:["נתת"],hu:["נתן"],hi:["נתנה"],anachnu:["נתנו"],atem:["נתתם"],aten:["נתתן"],hem:["נתנו"],hen:["נתנו"]},
+            present: {ani: ["נותן"], ata: ["נותן"], at: ["נותנת"], hu: ["נותן"], hi: ["נותנת"], anachnu: ["נותנים"], atem: ["נותנים"], aten: ["נותנות"], hem: ["נותנים"], hen: ["נותנות"]},
+            future: {ani: ["אתן"], ata: ["תיתן"], at: ["תיתני"], hu: ["ייתן"], hi: ["תיתן"], anachnu: ["ניתן"], atem: ["תיתנו"], aten: ["תיתנו"], hem: ["ייתנו"], hen: ["תיתנה"]}},
+        {inf: "לראות", en: "to see", past:{ani:["ראיתי"],ata:["ראית"],at:["ראית"],hu:["ראה"],hi:["ראתה"],anachnu:["ראינו"],atem:["ראיתם"],aten:["ראיתן"],hem:["ראו"],hen:["ראו"]},
+            present: {ani: ["רואה"], ata: ["רואה"], at: ["רואה"], hu: ["רואה"], hi: ["רואה"], anachnu: ["רואים"], atem: ["רואים"], aten: ["רואות"], hem: ["רואים"], hen: ["רואות"]},
+            future: {ani: ["אראה"], ata: ["תראה"], at: ["תראי"], hu: ["יראה"], hi: ["תראה"], anachnu: ["נראה"], atem: ["תראו"], aten: ["תראו"], hem: ["יראו"], hen: ["תראנה"]}},
+        {inf: "לשמוע", en: "to hear", past:{ani:["שמעתי"],ata:["שמעת"],at:["שמעת"],hu:["שמע"],hi:["שמעה"],anachnu:["שמענו"],atem:["שמעתם"],aten:["שמעתן"],hem:["שמעו"],hen:["שמעו"]},
+            present: {ani: ["שומע"], ata: ["שומע"], at: ["שומעת"], hu: ["שומע"], hi: ["שומעת"], anachnu: ["שומעים"], atem: ["שומעים"], aten: ["שומעות"], hem: ["שומעים"], hen: ["שומעות"]},
+            future: {ani: ["אשמע"], ata: ["תשמע"], at: ["תשמעי"], hu: ["ישמע"], hi: ["תשמע"], anachnu: ["נשמע"], atem: ["תשמעו"], aten: ["תשמעו"], hem: ["ישמעו"], hen: ["תשמענה"]}},
+        {inf: "לעבוד", en: "to work", past:{ani:["עבדתי"],ata:["עבדת"],at:["עבדת"],hu:["עבד"],hi:["עבדה"],anachnu:["עבדנו"],atem:["עבדתם"],aten:["עבדתן"],hem:["עבדו"],hen:["עבדו"]},
+            present: {ani: ["עובד"], ata: ["עובד"], at: ["עובדת"], hu: ["עובד"], hi: ["עובדת"], anachnu: ["עובדים"], atem: ["עובדים"], aten: ["עובדות"], hem: ["עובדים"], hen: ["עובדות"]},
+            future: {ani: ["אעבוד"], ata: ["תעבוד"], at: ["תעבדי"], hu: ["יעבוד"], hi: ["תעבוד"], anachnu: ["נעבוד"], atem: ["תעבדו"], aten: ["תעבדו"], hem: ["יעבדו"], hen: ["תעבודנה"]}},
+        {inf: "לפתוח", en: "to open", past:{ani:["פתחתי"],ata:["פתחת"],at:["פתחת"],hu:["פתח"],hi:["פתחה"],anachnu:["פתחנו"],atem:["פתחתם"],aten:["פתחתן"],hem:["פתחו"],hen:["פתחו"]},
+            present: {ani: ["פותח"], ata: ["פותח"], at: ["פותחת"], hu: ["פותח"], hi: ["פותחת"], anachnu: ["פותחים"], atem: ["פותחים"], aten: ["פותחות"], hem: ["פותחים"], hen: ["פותחות"]},
+            future: {ani: ["אפתח"], ata: ["תפתח"], at: ["תפתחי"], hu: ["יפתח"], hi: ["תפתח"], anachnu: ["נפתח"], atem: ["תפתחו"], aten: ["תפתחו"], hem: ["יפתחו"], hen: ["תפתחנה"]}},
+        {inf: "לסגור", en: "to close", past:{ani:["סגרתי"],ata:["סגרת"],at:["סגרת"],hu:["סגר"],hi:["סגרה"],anachnu:["סגרנו"],atem:["סגרתם"],aten:["סגרתן"],hem:["סגרו"],hen:["סגרו"]},
+            present: {ani: ["סוגר"], ata: ["סוגר"], at: ["סוגרת"], hu: ["סוגר"], hi: ["סוגרת"], anachnu: ["סוגרים"], atem: ["סוגרים"], aten: ["סוגרות"], hem: ["סוגרים"], hen: ["סוגרות"]},
+            future: {ani: ["אסגור"], ata: ["תסגור"], at: ["תסגרי"], hu: ["יסגור"], hi: ["תסגור"], anachnu: ["נסגור"], atem: ["תסגרו"], aten: ["תסגרו"], hem: ["יסגרו"], hen: ["תסגורנה"]}},
+        {inf: "לרוץ", en: "to run", past:{ani:["רצתי"],ata:["רצת"],at:["רצת"],hu:["רץ"],hi:["רצה"],anachnu:["רצנו"],atem:["רצתם"],aten:["רצתן"],hem:["רצו"],hen:["רצו"]},
+            present: {ani: ["רץ"], ata: ["רץ"], at: ["רצה"], hu: ["רץ"], hi: ["רצה"], anachnu: ["רצים"], atem: ["רצים"], aten: ["רצות"], hem: ["רצים"], hen: ["רצות"]},
+            future: {ani: ["ארוץ"], ata: ["תרוץ"], at: ["תרוצי"], hu: ["ירוץ"], hi: ["תרוץ"], anachnu: ["נרוץ"], atem: ["תרוצו"], aten: ["תרוצו"], hem: ["ירוצו"], hen: ["תרוצנה"]}},
+        {inf: "לקנות", en: "to buy", past:{ani:["קניתי"],ata:["קנית"],at:["קנית"],hu:["קנה"],hi:["קנתה"],anachnu:["קנינו"],atem:["קניתם"],aten:["קניתן"],hem:["קנו"],hen:["קנו"]},
+            present: {ani: ["קונה"], ata: ["קונה"], at: ["קונה"], hu: ["קונה"], hi: ["קונה"], anachnu: ["קונים"], atem: ["קונים"], aten: ["קונות"], hem: ["קונים"], hen: ["קונות"]},
+            future: {ani: ["אקנה"], ata: ["תקנה"], at: ["תקני"], hu: ["יקנה"], hi: ["תקנה"], anachnu: ["נקנה"], atem: ["תקנו"], aten: ["תקנו"], hem: ["יקנו"], hen: ["תקנינה"]}},
+    ],
+    piel: [
+        {inf: "לדבר", en: "to speak", past:{ani:["דיברתי", "דברתי"],ata:["דיברת", "דברת"],at:["דיברת" ,"דברת"],hu:["דיבר" ,"דבר"],hi:["דיברה", "דברה"],anachnu:["דיברנו", "דברנו"],atem:["דיברתם" ,"דברתם"],aten:["דיברתן", "דברתן"],hem:["דיברו", "דברו"],hen:["דיברו", "דברו"]}, 
+            present: {ani: ["מדבר"], ata: ["מדבר"], at: ["מדברת"], hu: ["מדבר"], hi: ["מדברת"], anachnu: ["מדברים"], atem: ["מדברים"], aten: ["מדברות"], hem: ["מדברים"], hen: ["מדברות"]},
+            future: {ani: ["אדבר"], ata: ["תדבר"], at: ["תדברי"], hu: ["ידבר"], hi: ["תדבר"], anachnu: ["נדבר"], atem: ["תדברו"], aten: ["תדברו"], hem: ["ידברו"], hen: ["תדברנה"]}},
+        {inf:"לצחצח", en: "to brush", past:{ani:["צחצחתי"],ata:["צחצחת"],at:["צחצחת"],hu:["צחצח"],hi:["צחצחה"],anachnu:["צחצחנו"],atem:["צחצחתם"],aten:["צחצחתן"],hem:["צחצחו"],hen:["צחצחו"]},
+            present: {ani: ["מצחצח"], ata: ["מצחצח"], at: ["מצחצחת"], hu: ["מצחצח"], hi: ["מצחצחת"], anachnu: ["מצחצחים"], atem: ["מצחצחים"], aten: ["מצחצחות"], hem: ["מצחצחים"], hen: ["מצחצחות"]},
+            future: {ani: ["אצחצח"], ata: ["תצחצח"], at: ["תצחצחי"], hu: ["יצחצח"], hi: ["תצחצח"], anachnu: ["נצחצח"], atem: ["תצחצחו"], aten: ["תצחצחו"], hem: ["יצחצחו"], hen: ["תצחצחנה"]}},
+        {inf:"לכבס", en: "to do laundry", past:{ani:["כבסתי"],ata:["כבסת"],at:["כבסת"],hu:["כבס"],hi:["כבסה"],anachnu:["כבסנו"],atem:["כבסתם"],aten:["כבסתן"],hem:["כבסו"],hen:["כבסו"]},
+            present: {ani: ["מכבס"], ata: ["מכבס"], at: ["מכבסת"], hu: ["מכבס"], hi: ["מכבסת"], anachnu: ["מכבסים"], atem: ["מכבסים"], aten: ["מכבסות"], hem: ["מכבסים"], hen: ["מכבסות"]},
+            future: {ani: ["אכבס"], ata: ["תכבס"], at: ["תכבסי"], hu: ["יכבס"], hi: ["תכבס"], anachnu: ["נכבס"], atem: ["תכבסו"], aten: ["תכבסו"], hem: ["יכבסו"], hen: ["תכבסנה"]}},
+        {inf: "לבשל", en: "to cook", past:{ani:["בישלתי"],ata:["בישלת"],at:["בישלת"],hu:["בישל"],hi:["בישלה"],anachnu:["בישלנו"],atem:["בישלתם"],aten:["בישלתן"],hem:["בישלו", "בשלו"],hen:["בישלו", "בשלו"]},
+            present: {ani: ["מבשל"], ata: ["מבשל"], at: ["מבשלת"], hu: ["מבשל"], hi: ["מבשלת"], anachnu: ["מבשלים"], atem: ["מבשלים"], aten: ["מבשלות"], hem: ["מבשלים"], hen: ["מבשלות"]},
+            future: {ani: ["אבשל"], ata: ["תבשל"], at: ["תבשלי"], hu: ["יבשל"], hi: ["תבשל"], anachnu: ["נבשל"], atem: ["תבשלו"], aten: ["תבשלו"], hem: ["יבשלו"], hen: ["תבשלנה"]}},
+        {inf: "לשחק", en: "to play", past:{ani:["שיחקתי"],ata:["שיחקת"],at:["שיחקת"],hu:["שיחק"],hi:["שיחקה"],anachnu:["שיחקנו"],atem:["שיחקתם"],aten:["שיחקתן"],hem:["שיחקו", "שחקו"],hen:["שיחקו", "שחקו"]},
+            present: {ani: ["משחק"], ata: ["משחק"], at: ["משחקת"], hu: ["משחק"], hi: ["משחקת"], anachnu: ["משחקים"], atem: ["משחקים"], aten: ["משחקות"], hem: ["משחקים"], hen: ["משחקות"]},
+            future: {ani: ["אשחק"], ata: ["תשחק"], at: ["תשחקי"], hu: ["ישחק"], hi: ["תשחק"], anachnu: ["נשחק"], atem: ["תשחקו"], aten: ["תשחקו"], hem: ["ישחקו"], hen: ["תשחקנה"]}},
+        {inf: "לטייל", en: "to travel/walk", past:{ani:["טיילתי"],ata:["טיילת"],at:["טיילת"],hu:["טייל"],hi:["טיילה"],anachnu:["טיילנו"],atem:["טיילתם"],aten:["טיילתן"],hem:["טיילו", "טלו"],hen:["טיילו", "טלו"]},
+            present: {ani: ["מטייל"], ata: ["מטייל"], at: ["מטיילת"], hu: ["מטייל"], hi: ["מטיילת"], anachnu: ["מטיילים"], atem: ["מטיילים"], aten: ["מטיילות"], hem: ["מטיילים"], hen: ["מטיילות"]},
+            future: {ani: ["אטייל"], ata: ["תטייל"], at: ["תטיילי"], hu: ["יטייל"], hi: ["תטייל"], anachnu: ["נטייל"], atem: ["תטיילו"], aten: ["תטיילו"], hem: ["יטיילו"], hen: ["תטיילנה"]}}, // Corrected future aten
+        {inf: "לסדר", en: "to arrange/tidy", past:{ani:["סידרתי"],ata:["סידרת"],at:["סידרת"],hu:["סידר"],hi:["סידרה"],anachnu:["סידרנו"],atem:["סידרתם"],aten:["סידרתן"],hem:["סידרו", "סדרו"],hen:["סידרו", "סדרו"]},
+            present: {ani: ["מסדר"], ata: ["מסדר"], at: ["מסדרת"], hu: ["מסדר"], hi: ["מסדרת"], anachnu: ["מסדרים"], atem: ["מסדרים"], aten: ["מסדרות"], hem: ["מסדרים"], hen: ["מסדרות"]},
+            future: {ani: ["אסדר"], ata: ["תסדר"], at: ["תסדרי"], hu: ["יסדר"], hi: ["תסדר"], anachnu: ["נסדר"], atem: ["תסדרו"], aten: ["תסדרו"], hem: ["יסדרו"], hen: ["תסדרנה"]}},
+        {inf: "לשלם", en: "to pay", past:{ani:["שילמתי"],ata:["שילמת"],at:["שילמת"],hu:["שילם"],hi:["שילמה"],anachnu:["שילמנו"],atem:["שילמתם"],aten:["שילמתן"],hem:["שילמו", "שלמו"],hen:["שילמו", "שלמו"]},
+            present: {ani: ["משלם"], ata: ["משלם"], at: ["משלמת"], hu: ["משלם"], hi: ["משלמת"], anachnu: ["משלמים"], atem: ["משלמים"], aten: ["משלמות"], hem: ["משלמים"], hen: ["משלמות"]},
+            future: {ani: ["אשלם"], ata: ["תשלם"], at: ["תשלמי"], hu: ["ישולם"], hi: ["תשלם"], anachnu: ["נשלם"], atem: ["תשלמו"], aten: ["תשלמו"], hem: ["ישלמו"], hen: ["תשלמנה"]}},
+        {inf: "לבקש", en: "to ask for/request", past:{ani:["ביקשתי"],ata:["ביקשת"],at:["ביקשת"],hu:["ביקש"],hi:["ביקשה"],anachnu:["ביקשנו"],atem:["ביקשתם"],aten:["ביקשתן"],hem:["ביקשו", "בקשו"],hen:["ביקשו", "בקשו"]},
+            present: {ani: ["מבקש"], ata: ["מבקש"], at: ["מבקשת"], hu: ["מבקש"], hi: ["מבקשת"], anachnu: ["מבקשים"], atem: ["מבקשים"], aten: ["מבקשות"], hem: ["מבקשים"], hen: ["מבקשות"]},
+            future: {ani: ["אבקש"], ata: ["תבקש"], at: ["תבקשי"], hu: ["יבקש"], hi: ["תבקש"], anachnu: ["נבקש"], atem: ["תבקשו"], aten: ["תבקשו"], hem: ["יבקשו"], hen: ["תבקשנה"]}},
+        {inf: "לנסות", en: "to try", past:{ani:["ניסיתי"],ata:["ניסית"],at:["ניסית"],hu:["ניסה"],hi:["ניסתה"],anachnu:["ניסינו"],atem:["ניסיתם"],aten:["ניסיתן"],hem:["ניסו"],hen:["ניסו"]},
+            present: {ani: ["מנסה"], ata: ["מנסה"], at: ["מנסה"], hu: ["מנסה"], hi: ["מנסה"], anachnu: ["מנסים"], atem: ["מנסים"], aten: ["מנסות"], hem: ["מנסים"], hen: ["מנסות"]},
+            future: {ani: ["אנסה"], ata: ["תנסה"], at: ["תנסי"], hu: ["ינסה"], hi: ["תנסה"], anachnu: ["ננסה"], atem: ["תנסו"], aten: ["תנסו"], hem: ["ינסו"], hen: ["תנסינה"]}},
+        {inf: "לספר", en: "to tell", past:{ani:["סיפרתי"],ata:["סיפרת"],at:["סיפרת"],hu:["סיפר"],hi:["סיפרה"],anachnu:["סיפרנו"],atem:["סיפרתם"],aten:["סיפרתן"],hem:["סיפרו", "ספרו"],hen:["סיפרו", "ספרו"]},
+            present: {ani: ["מספר"], ata: ["מספר"], at: ["מספרת"], hu: ["מספר"], hi: ["מספרת"], anachnu: ["מספרים"], atem: ["מספרים"], aten: ["מספרות"], hem: ["מספרים"], hen: ["מספרות"]},
+            future: {ani: ["אספר"], ata: ["תספר"], at: ["תספרי"], hu: ["יספר"], hi: ["תספר"], anachnu: ["נספר"], atem: ["תספרו"], aten: ["תספרו"], hem: ["יספרו"], hen: ["תספרנה"]}},
+        {inf: "לקבל", en: "to receive/get", past:{ani:["קיבלתי"],ata:["קיבלת"],at:["קיבלת"],hu:["קיבל"],hi:["קיבלה"],anachnu:["קיבלנו"],atem:["קיבלתם"],aten:["קיבלתן"],hem:["קיבלו", "קבלו"],hen:["קיבלו", "קבלו"]},
+            present: {ani: ["מקבל"], ata: ["מקבל"], at: ["מקבלת"], hu: ["מקבל"], hi: ["מקבלת"], anachnu: ["מקבלים"], atem: ["מקבלים"], aten: ["מקבלות"], hem: ["מקבלים"], hen: ["מקבלות"]},
+            future: {ani: ["אקבל"], ata: ["תקבל"], at: ["תקבלי"], hu: ["יקבל"], hi: ["תקבל"], anachnu: ["נקבל"], atem: ["תקבלו"], aten: ["תקבלו"], hem: ["יקבלו"], hen: ["תקבלנה"]}},
+        {inf: "ללמד", en: "to teach", past:{ani:["לימדתי"],ata:["לימדת"],at:["לימדת"],hu:["לימד"],hi:["לימדה"],anachnu:["לימדנו"],atem:["לימדתם"],aten:["לימדתן"],hem:["לימדו", "למדו"],hen:["לימדו", "למדו"]},
+            present: {ani: ["מלמד"], ata: ["מלמד"], at: ["מלמדת"], hu: ["מלמד"], hi: ["מלמדת"], anachnu: ["מלמדים"], atem: ["מלמדים"], aten: ["מלמדות"], hem: ["מלמדים"], hen: ["מלמדות"]},
+            future: {ani: ["אלמד"], ata: ["תלמד"], at: ["תלמדי"], hu: ["ילמד"], hi: ["תלמד"], anachnu: ["נלמד"], atem: ["תלמדו"], aten: ["תלמדו"], hem: ["ילמדו"], hen: ["תלמדנה"]}},
+        {inf: "לחפש", en: "to search for", past:{ani:["חיפשתי"],ata:["חיפשת"],at:["חיפשת"],hu:["חיפש"],hi:["חיפשה"],anachnu:["חיפשנו"],atem:["חיפשתם"],aten:["חיפשתן"],hem:["חיפשו", "חפשו"],hen:["חיפשו", "חפשו"]},
+            present: {ani: ["מחפש"], ata: ["מחפש"], at: ["מחפשת"], hu: ["מחפש"], hi: ["מחפשת"], anachnu: ["מחפשים"], atem: ["מחפשים"], aten: ["מחפשות"], hem: ["מחפשים"], hen: ["מחפשות"]},
+            future: {ani: ["אחפש"], ata: ["תחפש"], at: ["תחפשי"], hu: ["יחפש"], hi: ["תחפש"], anachnu: ["נחפש"], atem: ["תחפשו"], aten: ["תחפשו"], hem: ["יחפשו"], hen: ["תחפשנה"]}},
+        {inf: "לאשר", en: "to approve/confirm", past:{ani:["אישרתי"],ata:["אישרת"],at:["אישרת"],hu:["אישר"],hi:["אישרה"],anachnu:["אישרנו"],atem:["אישרתם"],aten:["אישרתן"],hem:["אישרו", "אשרו"],hen:["אישרו", "אשרו"]},
+            present: {ani: ["מאשר"], ata: ["מאשר"], at: ["מאשרת"], hu: ["מאשר"], hi: ["מאשרת"], anachnu: ["מאשרים"], atem: ["מאשרים"], aten: ["מאשרות"], hem: ["מאשרים"], hen: ["מאשרות"]},
+            future: {ani: ["אאשר"], ata: ["תאשר"], at: ["תאשרי"], hu: ["יאשר"], hi: ["תאשר"], anachnu: ["נאשר"], atem: ["תאשרו"], aten: ["תאשרו"], hem: ["יאשרו"], hen: ["תאשרנה"]}},
+        {inf: "לבקר", en: "to visit", past:{ani:["ביקרתי"],ata:["ביקרת"],at:["ביקרת"],hu:["ביקר"],hi:["ביקרה"],anachnu:["ביקרנו"],atem:["ביקרתם"],aten:["ביקרתן"],hem:["ביקרו", "בקרו"],hen:["ביקרו", "בקרו"]},
+            present: {ani: ["מבקר"], ata: ["מבקר"], at: ["מבקרת"], hu: ["מבקר"], hi: ["מבקרת"], anachnu: ["מבקרים"], atem: ["מבקרים"], aten: ["מבקרות"], hem: ["מבקרים"], hen: ["מבקרות"]},
+            future: {ani: ["אבקר"], ata: ["תבקר"], at: ["תבקרי"], hu: ["יבקר"], hi: ["תבקר"], anachnu: ["נבקר"], atem: ["תבקרו"], aten: ["תבקרו"], hem: ["יבקרו"], hen: ["תבקרנה"]}},
+        {inf: "לתקן", en: "to fix/repair", past:{ani:["תיקנתי"],ata:["תיקנת"],at:["תיקנת"],hu:["תיקן"],hi:["תיקנה"],anachnu:["תיקנו"],atem:["תיקנתם"],aten:["תיקנתן"],hem:["תיקנו", "תקנו"],hen:["תיקנו", "תקנו"]},
+            present: {ani: ["מתקן"], ata: ["מתקן"], at: ["מתקנת"], hu: ["מתקן"], hi: ["מתקנת"], anachnu: ["מתקנים"], atem: ["מתקנים"], aten: ["מתקנות"], hem: ["מתקנים"], hen: ["מתקנות"]},
+            future: {ani: ["אתקן"], ata: ["תתקן"], at: ["תתקני"], hu: ["יתקן"], hi: ["תתקן"], anachnu: ["נתקן"], atem: ["תתקנו"], aten: ["תתקנו"], hem: ["יתקנו"], hen: ["תתקנה"]}},
+        {inf: "לסיים", en: "to finish", past:{ani:["סיימתי"],ata:["סיימת"],at:["סיימת"],hu:["סיים"],hi:["סיימה"],anachnu:["סיימנו"],atem:["סיימתם"],aten:["סיימתן"],hem:["סיימו", "סמו"],hen:["סיימו", "סמו"]},
+            present: {ani: ["מסיים"], ata: ["מסיים"], at: ["מסיימת"], hu: ["מסיים"], hi: ["מסיימת"], anachnu: ["מסיימים"], atem: ["מסיימים"], aten: ["מסיימות"], hem: ["מסיימים"], hen: ["מסיימות"]},
+            future: {ani: ["אסיים"], ata: ["תסיים"], at: ["תסיימי"], hu: ["יסיים"], hi: ["תסיים"], anachnu: ["נסיים"], atem: ["תסיימו"], aten: ["תסיימו"], hem: ["יסיימו"], hen: ["תסיימנה"]}},
+    ],
+    hifil: [
+        {inf:"להדליק", en: "to turn on / light", past:{ani:["הדלקתי"],ata:["הדלקת"],at:["הדלקת"],hu:["הדליק"],hi:["הדליקה"],anachnu:["הדלקנו"],atem:["הדלקתם"],aten:["הדלקתן"],hem:["הדליקו", "הדלקו"],hen:["הדליקו", "הדלקו"]},
+            present: {ani: ["מדליק"], ata: ["מדליק"], at: ["מדליקה"], hu: ["מדליק"], hi: ["מדליקה"], anachnu: ["מדליקים"], atem: ["מדליקים"], aten: ["מדליקות"], hem: ["מדליקים"], hen: ["מדליקות"]},
+            future: {ani: ["אדליק"], ata: ["תדליק"], at: ["תדליקי"], hu: ["ידליק"], hi: ["תדליק"], anachnu: ["נדליק"], atem: ["תדליקו"], aten: ["תדליקו"], hem: ["ידליקו"], hen: ["תדלקנה"]}},
+        {inf:"להבריח", en: "to smuggle / scare away", past:{ani:["הברחתי"],ata:["הברחת"],at:["הברחת"],hu:["הבריח"],hi:["הבריחה"],anachnu:["הברחנו"],atem:["הברחתם"],aten:["הברחתן"],hem:["הבריחו", "הברחו"],hen:["הבריחו", "הברחו"]},
+            present: {ani: ["מבריח"], ata: ["מבריח"], at: ["מבריחה"], hu: ["מבריח"], hi: ["מבריחה"], anachnu: ["מבריחים"], atem: ["מבריחים"], aten: ["מבריחות"], hem: ["מבריחים"], hen: ["מבריחות"]},
+            future: {ani: ["אבריח"], ata: ["תבריח"], at: ["תבריחי"], hu: ["יבריח"], hi: ["תבריח"], anachnu: ["נבריח"], atem: ["תבריחו"], aten: ["תבריחו"], hem: ["יבריחו"], hen: ["תבריחנה"]}},
+        {inf: "להגיד", en: "to tell / say", past:{ani:["הגדתי"],ata:["הגדת"],at:["הגדת"],hu:["הגיד"],hi:["הגידה"],anachnu:["הגדנו"],atem:["הגדתם"],aten:["הגדתן"],hem:["הגידו", "הגדו"],hen:["הגידו", "הגדו"]},
+            present: {ani: ["מגיד"], ata: ["מגיד"], at: ["מגידה"], hu: ["מגיד"], hi: ["מגידה"], anachnu: ["מגידים"], atem: ["מגידים"], aten: ["מגידות"], hem: ["מגידים"], hen: ["מגידות"]},
+            future: {ani: ["אגיד"], ata: ["תגיד"], at: ["תגידי"], hu: ["יגיד"], hi: ["תגיד"], anachnu: ["נגיד"], atem: ["תגידו"], aten: ["תגידו"], hem: ["יגידו"], hen: ["תגֵדְנה"]}},
+        {inf: "להזמין", en: "to order / invite", past:{ani:["הזמנתי"],ata:["הזמנת"],at:["הזמנת"],hu:["הזמין"],hi:["הזמינה"],anachnu:["הזמנו"],atem:["הזמנתם"],aten:["הזמנתן"],hem:["הזמינו", "הזמנו"],hen:["הזמינו", "הזמנו"]},
+            present: {ani: ["מזמין"], ata: ["מזמין"], at: ["מזמינה"], hu: ["מזמין"], hi: ["מזמינה"], anachnu: ["מזמינים"], atem: ["מזמינים"], aten: ["מזמינות"], hem: ["מזמינים"], hen: ["מזמינות"]},
+            future: {ani: ["אזמין"], ata: ["תזמין"], at: ["תזמיני"], hu: ["יזמין"], hi: ["תזמין"], anachnu: ["נזמין"], atem: ["תזמינו"], aten: ["תזמינו"], hem: ["יזמינו"], hen: ["תזמנה"]}},
+        {inf: "להבין", en: "to understand", past:{ani:["הבנתי"],ata:["הבנת"],at:["הבנת"],hu:["הבין"],hi:["הבינה"],anachnu:["הבנו"],atem:["הבנתם"],aten:["הבנתן"],hem:["הבינו", "הבנו"],hen:["הבינו", "הבנו"]},
+            present: {ani: ["מבין"], ata: ["מבין"], at: ["מבינה"], hu: ["מבין"], hi: ["מבינה"], anachnu: ["מבינים"], atem: ["מבינים"], aten: ["מבינות"], hem: ["מבינים"], hen: ["מבינות"]},
+            future: {ani: ["אבין"], ata: ["תבין"], at: ["תביני"], hu: ["יבין"], hi: ["תבין"], anachnu: ["נבין"], atem: ["תבינו"], aten: ["תבינו"], hem: ["יבינו"], hen: ["תבנה"]}},
+        {inf: "להסביר", en: "to explain", past:{ani:["הסברתי"],ata:["הסברת"],at:["הסברת"],hu:["הסביר"],hi:["הסבירה"],anachnu:["הסברנו"],atem:["הסברתם"],aten:["הסברתן"],hem:["הסבירו", "הסברו"],hen:["הסבירו", "הסברו"]},
+            present: {ani: ["מסביר"], ata: ["מסביר"], at: ["מסבירה"], hu: ["מסביר"], hi: ["מסבירה"], anachnu: ["מסבירים"], atem: ["מסבירים"], aten: ["מסבירות"], hem: ["מסבירים"], hen: ["מסבירות"]},
+            future: {ani: ["אסביר"], ata: ["תסביר"], at: ["תסבירי"], hu: ["יסביר"], hi: ["תסביר"], anachnu: ["נסביר"], atem: ["תסבירו"], aten: ["תסבירו"], hem: ["יסבירו"], hen: ["תסברנה"]}},
+        {inf: "להתחיל", en: "to start / begin", past:{ani:["התחלתי"],ata:["התחלת"],at:["התחלת"],hu:["התחיל"],hi:["התחילה"],anachnu:["התחלנו"],atem:["התחלתם"],aten:["התחלתן"],hem:["התחילו", "התחלו"],hen:["התחילו", "התחלו"]},
+            present: {ani: ["מתחיל"], ata: ["מתחיל"], at: ["מתחילה"], hu: ["מתחיל"], hi: ["מתחילה"], anachnu: ["מתחילים"], atem: ["מתחילים"], aten: ["מתחילות"], hem: ["מתחילים"], hen: ["מתחילות"]},
+            future: {ani: ["אתחיל"], ata: ["תתחיל"], at: ["תתחילי"], hu: ["יתחיל"], hi: ["תתחיל"], anachnu: ["נתחיל"], atem: ["תתחילו"], aten: ["תתחילו"], hem: ["יתחילו"], hen: ["תתחלנה"]}},
+        {inf: "להפסיק", en: "to stop", past:{ani:["הפסקתי"],ata:["הפסקת"],at:["הפסקת"],hu:["הפסיק"],hi:["הפסיקה"],anachnu:["הפסקנו"],atem:["הפסקתם"],aten:["הפסקתן"],hem:["הפסיקו", "הפסיקו"],hen:["הפסיקו", "הפסיקו"]},
+            present: {ani: ["מפסיק"], ata: ["מפסיק"], at: ["מפסיקה"], hu: ["מפסיק"], hi: ["מפסיקה"], anachnu: ["מפסיקים"], atem: ["מפסיקים"], aten: ["מפסיקות"], hem: ["מפסיקים"], hen: ["מפסיקות"]},
+            future: {ani: ["אפסיק"], ata: ["תפסיק"], at: ["תפסיקי"], hu: ["יפסיק"], hi: ["תפסיק"], anachnu: ["נפסיק"], atem: ["תפסיקו"], aten: ["תפסיקו"], hem: ["יפסיקו"], hen: ["תפסקנה"]}},
+        {inf: "להרגיש", en: "to feel", past:{ani:["הרגשתי"],ata:["הרגשת"],at:["הרגשת"],hu:["הרגיש"],hi:["הרגישה"],anachnu:["הרגשנו"],atem:["הרגשתם"],aten:["הרגשתן"],hem:["הרגישו", "הרגשו"],hen:["הרגישו", "הרגשו"]},
+            present: {ani: ["מרגיש"], ata: ["מרגיש"], at: ["מרגישה"], hu: ["מרגיש"], hi: ["מרגישה"], anachnu: ["מרגישים"], atem: ["מרגישים"], aten: ["מרגישות"], hem: ["מרגישים"], hen: ["מרגישות"]},
+            future: {ani: ["ארגיש"], ata: ["תרגיש"], at: ["תרגישי"], hu: ["ירגיש"], hi: ["תרגיש"], anachnu: ["נרגיש"], atem: ["תרגישו"], aten: ["תרגישו"], hem: ["ירגישו"], hen: ["תרגשנה"]}},
+        {inf: "להקשיב", en: "to listen", past:{ani:["הקשבתי"],ata:["הקשבת"],at:["הקשבת"],hu:["הקשיב"],hi:["הקשיבה"],anachnu:["הקשבנו"],atem:["הקשבתם"],aten:["הקשבתן"],hem:["הקשיבו", "הקשבו"],hen:["הקשיבו", "הקשבו"]},
+            present: {ani: ["מקשיב"], ata: ["מקשיב"], at: ["מקשיבה"], hu: ["מקשיב"], hi: ["מקשיבה"], anachnu: ["מקשיבים"], atem: ["מקשיבים"], aten: ["מקשיבות"], hem: ["מקשיבים"], hen: ["מקשיבות"]},
+            future: {ani: ["אקשיב"], ata: ["תקשיב"], at: ["תקשיבי"], hu: ["יקשיב"], hi: ["תקשיב"], anachnu: ["נקשיב"], atem: ["תקשיבו"], aten: ["תקשיבו"], hem: ["יקשיבו"], hen: ["תקשבנה"]}},
+        {inf: "להסכים", en: "to agree", past:{ani:["הסכמתי"],ata:["הסכמת"],at:["הסכמת"],hu:["הסכים"],hi:["הסכימה"],anachnu:["הסכמנו"],atem:["הסכמתם"],aten:["הסכמתן"],hem:["הסכימו", "הסכמו"],hen:["הסכימו", "הסכמו"]},
+            present: {ani: ["מסכים"], ata: ["מסכים"], at: ["מסכימה"], hu: ["מסכים"], hi: ["מסכימה"], anachnu: ["מסכימים"], atem: ["מסכימים"], aten: ["מסכימות"], hem: ["מסכימים"], hen: ["מסכימות"]},
+            future: {ani: ["אסכים"], ata: ["תסכים"], at: ["תסכימי"], hu: ["יסכים"], hi: ["תסכים"], anachnu: ["נסכים"], atem: ["תסכימו"], aten: ["תסכימו"], hem: ["יסכימו"], hen: ["תסכמנה"]}},
+        {inf: "להכין", en: "to prepare", past:{ani:["הכנתי"],ata:["הכנת"],at:["הכנת"],hu:["הכין"],hi:["הכינה"],anachnu:["הכנו"],atem:["הכנתם"],aten:["הכנתן"],hem:["הכינו", "הכנו"],hen:["הכינו", "הכנו"]},
+            present: {ani: ["מכין"], ata: ["מכין"], at: ["מכינה"], hu: ["מכין"], hi: ["מכינה"], anachnu: ["מכינים"], atem: ["מכינים"], aten: ["מכינות"], hem: ["מכינים"], hen: ["מכינות"]},
+            future: {ani: ["אכין"], ata: ["תכין"], at: ["תכיני"], hu: ["יכין"], hi: ["תכין"], anachnu: ["נכין"], atem: ["תכינו"], aten: ["תכינו"], hem: ["יכינו"], hen: ["תכנה"]}},
+        {inf: "להאמין", en: "to believe", past:{ani:["האמנתי"],ata:["האמנת"],at:["האמנת"],hu:["האמין"],hi:["האמינה"],anachnu:["האמנו"],atem:["האמנתם"],aten:["האמנתן"],hem:["האמינו", "האמנו"],hen:["האמינו", "האמנו"]},
+            present: {ani: ["מאמין"], ata: ["מאמין"], at: ["מאמינה"], hu: ["מאמין"], hi: ["מאמינה"], anachnu: ["מאמינים"], atem: ["מאמינים"], aten: ["מאמינות"], hem: ["מאמינים"], hen: ["מאמינות"]},
+            future: {ani: ["אאמין"], ata: ["תאמין"], at: ["תאמיני"], hu: ["יאמין"], hi: ["תאמין"], anachnu: ["נאמין"], atem: ["תאמינו"], aten: ["תאמינו"], hem: ["יאמינו"], hen: ["תאמנה"]}},
+        {inf: "להמליץ", en: "to recommend", past:{ani:["המלצתי"],ata:["המלצת"],at:["המלצת"],hu:["המליץ"],hi:["המליצה"],anachnu:["המלצנו"],atem:["המלצתם"],aten:["המלצתן"],hem:["המליצו", "המלצו"],hen:["המליצו", "המלצו"]},
+            present: {ani: ["ממליץ"], ata: ["ממליץ"], at: ["ממליצה"], hu: ["ממליץ"], hi: ["ממליצה"], anachnu: ["ממליצים"], atem: ["ממליצים"], aten: ["ממליצות"], hem: ["ממליצים"], hen: ["ממליצות"]},
+            future: {ani: ["אמליץ"], ata: ["תמליץ"], at: ["תמליצי"], hu: ["ימליץ"], hi: ["תמליץ"], anachnu: ["נמליץ"], atem: ["תמליצו"], aten: ["תמליצו"], hem: ["ימליצו"], hen: ["תמלצנה"]}},
+        {inf: "להחליט", en: "to decide", past:{ani:["החלטתי"],ata:["החלטת"],at:["החלטת"],hu:["החליט"],hi:["החליטה"],anachnu:["החלטנו"],atem:["החלטתם"],aten:["החלטתן"],hem:["החליטו", "החלטו"],hen:["החליטו", "החלטו"]},
+            present: {ani: ["מחליט"], ata: ["מחליט"], at: ["מחליטה"], hu: ["מחליט"], hi: ["מחליטה"], anachnu: ["מחליטים"], atem: ["מחליטים"], aten: ["מחליטות"], hem: ["מחליטים"], hen: ["מחליטות"]},
+            future: {ani: ["אחליט"], ata: ["תחליט"], at: ["תחליטי"], hu: ["יחליט"], hi: ["תחליט"], anachnu: ["נחליט"], atem: ["תחליטו"], aten: ["תחליטו"], hem: ["יחליטו"], hen: ["תחלטנה"]}},
+        {inf: "להביא", en: "to bring", past:{ani:["הבאתי"],ata:["הבאת"],at:["הבאת"],hu:["הביא"],hi:["הביאה"],anachnu:["הבאנו"],atem:["הבאתם"],aten:["הבאתן"],hem:["הביאו", "הבאו"],hen:["הביאו", "הבאו"]},
+            present: {ani: ["מביא"], ata: ["מביא"], at: ["מביאה"], hu: ["מביא"], hi: ["מביאה"], anachnu: ["מביאים"], atem: ["מביאים"], aten: ["מביאות"], hem: ["מביאים"], hen: ["מביאות"]},
+            future: {ani: ["אביא"], ata: ["תביא"], at: ["תביאי"], hu: ["יביא"], hi: ["תביא"], anachnu: ["נביא"], atem: ["תביאו"], aten: ["תביאו"], hem: ["יביאו"], hen: ["תבאנה"]}},
+    ],
+    nifal: [
+        {inf:"להיפגש", en: "to meet", past:{ani:["נפגשתי"],ata:["נפגשת"],at:["נפגשת"],hu:["נפגש"],hi:["נפגשה"],anachnu:["נפגשנו"],atem:["נפגשתם"],aten:["נפגשתן"],hem:["נפגשו"],hen:["נפגשו"]},
+            present: {ani: ["נפגש"], ata: ["נפגש"], at: ["נפגשת"], hu: ["נפגש"], hi: ["נפגשת"], anachnu: ["נפגשים"], atem: ["נפגשים"], aten: ["נפגשות"], hem: ["נפגשים"], hen: ["נפגשות"]},
+            future: {ani: ["אפגש"], ata: ["תיפגש"], at: ["תיפגשי"], hu: ["ייפגש"], hi: ["תיפגש"], anachnu: ["ניפגש"], atem: ["תיפגשו"], aten: ["תיפגשו"], hem: ["ייפגשו"], hen: ["תיפגשנה"]}},
+        {inf:"להימצא", en: "to be found", past:{ani:["נמצאתי"],ata:["נמצאת"],at:["נמצאת"],hu:["נמצא"],hi:["נמצאה"],anachnu:["נמצאנו"],atem:["נמצאתם"],aten:["נמצאתן"],hem:["נמצאו"],hen:["נמצאו"]},
+            present: {ani: ["נמצא"], ata: ["נמצא"], at: ["נמצאת"], hu: ["נמצא"], hi: ["נמצאת"], anachnu: ["נמצאים"], atem: ["נמצאים"], aten: ["נמצאות"], hem: ["נמצאים"], hen: ["נמצאות"]},
+            future: {ani: ["אמצא"], ata: ["תימצא"], at: ["תימצאי"], hu: ["יימצא"], hi: ["תימצא"], anachnu: ["נימצא"], atem: ["תימצאו"], aten: ["תימצאו"], hem: ["יימצאו"], hen: ["תימצאנה"]}},
+        {inf:"להיכנס", en: "to enter", past:{ani:["נכנסתי"],ata:["נכנסת"],at:["נכנסת"],hu:["נכנס"],hi:["נכנסה"],anachnu:["נכנסנו"],atem:["נכנסתם"],aten:["נכנסתן"],hem:["נכנסו"],hen:["נכנסו"]},
+            present: {ani: ["נכנס"], ata: ["נכנס"], at: ["נכנסת"], hu: ["נכנס"], hi: ["נכנסת"], anachnu: ["נכנסים"], atem: ["נכנסים"], aten: ["נכנסות"], hem: ["נכנסים"], hen: ["נכנסות"]},
+            future: {ani: ["אכנס"], ata: ["תיכנס"], at: ["תיכנסי"], hu: ["ייכנס"], hi: ["תיכנס"], anachnu: ["ניכנס"], atem: ["תיכנסו"], aten: ["תיכנסו"], hem: ["ייכנסו"], hen: ["תיכנסנה"]}},
+        {inf:"להיעצר", en: "to be stopped / arrested", past:{ani:["נעצרתי"],ata:["נעצרת"],at:["נעצרת"],hu:["נעצר"],hi:["נעצרה"],anachnu:["נעצרנו"],atem:["נעצרתם"],aten:["נעצרתן"],hem:["נעצרו"],hen:["נעצרו"]},
+            present: {ani: ["נעצר"], ata: ["נעצר"], at: ["נעצרת"], hu: ["נעצר"], hi: ["נעצרת"], anachnu: ["נעצרים"], atem: ["נעצרים"], aten: ["נעצרות"], hem: ["נעצרים"], hen: ["נעצרות"]},
+            future: {ani: ["אעצר"], ata: ["תיעצר"], at: ["תיעצרי"], hu: ["ייעצר"], hi: ["תיעצר"], anachnu: ["ניעצר"], atem: ["תיעצרו"], aten: ["תיעצרו"], hem: ["ייעצרו"], hen: ["תיעצרנה"]}},
+        {inf:"להישאר", en: "to stay / remain", past:{ani:["נשארתי"],ata:["נשארת"],at:["נשארת"],hu:["נשאר"],hi:["נשארה"],anachnu:["נשארנו"],atem:["נשארתם"],aten:["נשארתן"],hem:["נשארו"],hen:["נשארו"]},
+            present: {ani: ["נשאר"], ata: ["נשאר"], at: ["נשארת"], hu: ["נשאר"], hi: ["נשארת"], anachnu: ["נשארים"], atem: ["נשארים"], aten: ["נשארות"], hem: ["נשארים"], hen: ["נשארות"]},
+            future: {ani: ["אשאר"], ata: ["תישאר"], at: ["תישארי"], hu: ["יישאר"], hi: ["תישאר"], anachnu: ["נישאר"], atem: ["תישארו"], aten: ["תישארו"], hem: ["יישאר"], hen: ["תישארנה"]}}, // Note: Hem future is יישארו, not יישאר
+        {inf:"להיסגר", en: "to be closed", past:{ani:["נסגרתי"],ata:["נסגרת"],at:["נסגרת"],hu:["נסגר"],hi:["נסגרה"],anachnu:["נסגרנו"],atem:["נסגרתם"],aten:["נסגרתן"],hem:["נסגרו"],hen:["נסגרו"]},
+            present: {ani: ["נסגר"], ata: ["נסגר"], at: ["נסגרת"], hu: ["נסגר"], hi: ["נסגרת"], anachnu: ["נסגרים"], atem: ["נסגרים"], aten: ["נסגרות"], hem: ["נסגרים"], hen: ["נסגרות"]},
+            future: {ani: ["אסגר"], ata: ["תיסגר"], at: ["תיסגרי"], hu: ["ייסגר"], hi: ["תיסגר"], anachnu: ["ניסגר"], atem: ["תיסגרו"], aten: ["תיסגרו"], hem: ["ייסגרו"], hen: ["תיסגרנה"]}},
+        {inf:"להיפתח", en: "to be opened", past:{ani:["נפתחתי"],ata:["נפתחת"],at:["נפתחת"],hu:["נפתח"],hi:["נפתחה"],anachnu:["נפתחנו"],atem:["נפתחתם"],aten:["נפתחתן"],hem:["נפתחו"],hen:["נפתחו"]},
+            present: {ani: ["נפתח"], ata: ["נפתח"], at: ["נפתחת"], hu: ["נפתח"], hi: ["נפתחת"], anachnu: ["נפתחים"], atem: ["נפתחים"], aten: ["נפתחות"], hem: ["נפתחים"], hen: ["נפתחות"]},
+            future: {ani: ["אפתח"], ata: ["תיפתח"], at: ["תיפתחי"], hu: ["ייפתח"], hi: ["תיפתח"], anachnu: ["ניפתח"], atem: ["תיפתחו"], aten: ["תיפתחו"], hem: ["ייפתחו"], hen: ["תיפתחנה"]}},
+        {inf:"להישבר", en: "to be broken", past:{ani:["נשברתי"],ata:["נשברת"],at:["נשברת"],hu:["נשבר"],hi:["נשברה"],anachnu:["נשברנו"],atem:["נשברתם"],aten:["נשברתן"],hem:["נשברו"],hen:["נשברו"]},
+            present: {ani: ["נשבר"], ata: ["נשבר"], at: ["נשברת"], hu: ["נשבר"], hi: ["נשברת"], anachnu: ["נשברים"], atem: ["נשברים"], aten: ["נשברות"], hem: ["נשברים"], hen: ["נשברות"]},
+            future: {ani: ["אשבר"], ata: ["תישבר"], at: ["תישברי"], hu: ["יישבר"], hi: ["תישבר"], anachnu: ["נישבר"], atem: ["תישברו"], aten: ["תישברו"], hem: ["יישברו"], hen: ["תישברנה"]}},
+        {inf:"להיזכר", en: "to remember / recall", past:{ani:["נזכרתי"],ata:["נזכרת"],at:["נזכרת"],hu:["נזכר"],hi:["נזכרה"],anachnu:["נזכרנו"],atem:["נזכרתם"],aten:["נזכרתן"],hem:["נזכרו"],hen:["נזכרו"]},
+            present: {ani: ["נזכר"], ata: ["נזכר"], at: ["נזכרת"], hu: ["נזכר"], hi: ["נזכרת"], anachnu: ["נזכרים"], atem: ["נזכרים"], aten: ["נזכרות"], hem: ["נזכרים"], hen: ["נזכרות"]},
+            future: {ani: ["אזכר"], ata: ["תיזכר"], at: ["תיזכרי"], hu: ["ייזכר"], hi: ["תיזכר"], anachnu: ["ניזכר"], atem: ["תיזכרו"], aten: ["תיזכרו"], hem: ["ייזכרו"], hen: ["תיזכרנה"]}},
+        {inf:"להילחם", en: "to fight", past:{ani:["נלחמתי"],ata:["נלחמת"],at:["נלחמת"],hu:["נלחם"],hi:["נלחמה"],anachnu:["נלחמנו"],atem:["נלחמתם"],aten:["נלחמתן"],hem:["נלחמו"],hen:["נלחמו"]},
+            present: {ani: ["נלחם"], ata: ["נלחם"], at: ["נלחמת"], hu: ["נלחם"], hi: ["נלחמת"], anachnu: ["נלחמים"], atem: ["נלחמים"], aten: ["נלחמות"], hem: ["נלחמים"], hen: ["נלחמות"]},
+            future: {ani: ["אלחם"], ata: ["תילחם"], at: ["תילחמי"], hu: ["יילחם"], hi: ["תילחם"], anachnu: ["נילחם"], atem: ["תילחמו"], aten: ["תילחמו"], hem: ["יילחמו"], hen: ["תילחמנה"]}},
+        {inf:"להיגמר", en: "to be finished / end", past:{ani:["נגמרתי"],ata:["נגמרת"],at:["נגמרת"],hu:["נגמר"],hi:["נגמרה"],anachnu:["נגמרנו"],atem:["נגמרתם"],aten:["נגמרתן"],hem:["נגמרו"],hen:["נגמרו"]},
+            present: {ani: ["נגמר"], ata: ["נגמר"], at: ["נגמרת"], hu: ["נגמר"], hi: ["נגמרת"], anachnu: ["נגמרים"], atem: ["נגמרים"], aten: ["נגמרות"], hem: ["נגמרים"], hen: ["נגמרות"]},
+            future: {ani: ["אגמר"], ata: ["תיגמר"], at: ["תיגמרי"], hu: ["ייגמר"], hi: ["תיגמר"], anachnu: ["ניגמר"], atem: ["תיגמרו"], aten: ["תיגמרו"], hem: ["ייגמרו"], hen: ["תיגמרנה"]}},
+        {inf:"להירדם", en: "to fall asleep", past:{ani:["נרדמתי"],ata:["נרדמת"],at:["נרדמת"],hu:["נרדם"],hi:["נרדמה"],anachnu:["נרדמנו"],atem:["נרדמתם"],aten:["נרדמתן"],hem:["נרדמו"],hen:["נרדמו"]},
+            present: {ani: ["נרדם"], ata: ["נרדם"], at: ["נרדמת"], hu: ["נרדם"], hi: ["נרדמת"], anachnu: ["נרדמים"], atem: ["נרדמים"], aten: ["נרדמות"], hem: ["נרדמים"], hen: ["נרדמות"]},
+            future: {ani: ["ארדם"], ata: ["תירדם"], at: ["תירדמי"], hu: ["יירדם"], hi: ["תירדם"], anachnu: ["נירדם"], atem: ["תירדמו"], aten: ["תירדמו"], hem: ["יירדמו"], hen: ["תירדמנה"]}},
+        {inf:"להיזהר", en: "to be careful", past:{ani:["נזהרתי"],ata:["נזהרת"],at:["נזהרת"],hu:["נזהר"],hi:["נזהרה"],anachnu:["נזהרנו"],atem:["נזהרתם"],aten:["נזהרתן"],hem:["נזהרו"],hen:["נזהרו"]},
+            present: {ani: ["נזהר"], ata: ["נזהר"], at: ["נזהרת"], hu: ["נזהר"], hi: ["נזהרת"], anachnu: ["נזהרים"], atem: ["נזהרים"], aten: ["נזהרות"], hem: ["נזהרים"], hen: ["נזהרות"]},
+            future: {ani: ["אזהר"], ata: ["תיזהר"], at: ["תיזהרי"], hu: ["ייזהר"], hi: ["תיזהר"], anachnu: ["ניזהר"], atem: ["תיזהרו"], aten: ["תיזהרו"], hem: ["ייזהרו"], hen: ["תיזהרנה"]}},
+        {inf:"להיראות", en: "to be seen / seem", past:{ani:["נראיתי"],ata:["נראית"],at:["נראית"],hu:["נראה"],hi:["נראתה"],anachnu:["נראינו"],atem:["נראיתם"],aten:["נראיתן"],hem:["נראו"],hen:["נראו"]},
+            present: {ani: ["נראה"], ata: ["נראה"], at: ["נראית"], hu: ["נראה"], hi: ["נראית"], anachnu: ["נראים"], atem: ["נראים"], aten: ["נראות"], hem: ["נראים"], hen: ["נראות"]},
+            future: {ani: ["אראה"], ata: ["תיראה"], at: ["תיראי"], hu: ["ייראה"], hi: ["תיראה"], anachnu: ["ניראה"], atem: ["תיראו"], aten: ["תיראו"], hem: ["ייראו"], hen: ["תיראינה"]}},
+        {inf:"להיפצע", en: "to be injured", past:{ani:["נפצעתי"],ata:["נפצעת"],at:["נפצעת"],hu:["נפצע"],hi:["נפצעה"],anachnu:["נפצענו"],atem:["נפצעתם"],aten:["נפצעתן"],hem:["נפצעו"],hen:["נפצעו"]},
+            present: {ani: ["נפצע"], ata: ["נפצע"], at: ["נפצעת"], hu: ["נפצע"], hi: ["נפצעת"], anachnu: ["נפצעים"], atem: ["נפצעים"], aten: ["נפצעות"], hem: ["נפצעים"], hen: ["נפצעות"]},
+            future: {ani: ["אפצע"], ata: ["תיפצע"], at: ["תיפצעי"], hu: ["ייפצע"], hi: ["תיפצע"], anachnu: ["ניפצע"], atem: ["תיפצעו"], aten: ["תיפצעו"], hem: ["ייפצעו"], hen: ["תיפצענה"]}},
+    ],
+    pual: [
+        {inf: "לְצֻחְצַח", en: "to be brushed (Passive)",
+            past: {ani: ["צֻחְצַחְתִּי"], ata: ["צֻחְצַחְתָּ"], at: ["צֻחְצַחְתְּ"], hu: ["צֻחְצַח"], hi: ["צֻחְצְחָה"], anachnu: ["צֻחְצַחְנוּ"], atem: ["צֻחְצַחְתֶּם"], aten: ["צֻחְצַחְתֶּן"], hem: ["צֻחְצְחוּ"], hen: ["צֻחְצְחוּ"]},
+            present: {ani: ["מְצֻחְצָח"], ata: ["מְצֻחְצָח"], at: ["מְצֻחְצַחַת"], hu: ["מְצֻחְצָח"], hi: ["מְצֻחְצַחַת"], anachnu: ["מְצֻחְצָחִים"], atem: ["מְצֻחְצָחִים"], aten: ["מְצֻחְצָחוֹת"], hem: ["מְצֻחְצָחִים"], hen: ["מְצֻחְצָחוֹת"]},
+            future: {ani: ["אֻצְחַץ"], ata: ["תְּצֻחְצַח"], at: ["תְּצֻחְצְחִי"], hu: ["יְצֻחְצַח"], hi: ["תְּצֻחְצַח"], anachnu: ["נְצֻחְצַח"], atem: ["תְּצֻחְצְחוּ"], aten: ["תְּצֻחְצְחוּ"], hem: ["יְצֻחְצְחוּ"], hen: ["תְּצֻחְצַחְנָה"]}},
+        {inf: "לְבֻשַׁל", en: "to be cooked (Passive)",
+            past: {ani: ["בֻּשַּׁלְתִּי"], ata: ["בֻּשַּׁלְתָּ"], at: ["בֻּשַּׁלְתְּ"], hu: ["בֻּשַּׁל"], hi: ["בֻּשְּׁלָה"], anachnu: ["בֻּשַּׁלְנוּ"], atem: ["בֻּשַּׁלְתֶּם"], aten: ["בֻּשַּׁלְתֶּן"], hem: ["בֻּשְּׁלוּ"], hen: ["בֻּשְּׁלוּ"]},
+            present: {ani: ["מְבֻשָּׁל"], ata: ["מְבֻשָּׁל"], at: ["מְבֻשֶּׁלֶת"], hu: ["מְבֻשָּׁל"], hi: ["מְבֻשֶּׁלֶת"], anachnu: ["מְבֻשָּׁלִים"], atem: ["מְבֻשָּׁלִים"], aten: ["מְבֻשָּׁלוֹת"], hem: ["מְבֻשָּׁלִים"], hen: ["מְבֻשָּׁלוֹת"]},
+            future: {ani: ["אֲבֻשַּׁל"], ata: ["תְּבֻשַּׁל"], at: ["תְּבֻשְּׁלִי"], hu: ["יְבֻשַּׁל"], hi: ["תְּבֻשַּׁל"], anachnu: ["נְבֻשַּׁל"], atem: ["תְּבֻשְּׁלוּ"], aten: ["תְּבֻשְּׁלוּ"], hem: ["יְבֻשְּׁלוּ"], hen: ["תְּבֻשַּׁלְנָה"]}},
+        {inf: "לְדֻבַּר", en: "to be spoken (about) (Passive)",
+            past: {ani: ["דֻּבַּרְתִּי"], ata: ["דֻּבַּרְתָּ"], at: ["דֻּבַּרְתְּ"], hu: ["דֻּבַּר"], hi: ["דֻּבְּרָה"], anachnu: ["דֻּבַּרְנוּ"], atem: ["דֻּבַּרְתֶּם"], aten: ["דֻּבַּרְתֶּן"], hem: ["דֻּבְּרוּ"], hen: ["דֻּבְּרוּ"]},
+            present: {ani: ["מְדֻבָּר"], ata: ["מְדֻבָּר"], at: ["מְדֻבֶּרֶת"], hu: ["מְדֻבָּר"], hi: ["מְדֻבֶּרֶת"], anachnu: ["מְדֻבָּרִים"], atem: ["מְדֻבָּרִים"], aten: ["מְדֻבָּרוֹת"], hem: ["מְדֻבָּרִים"], hen: ["מְדֻבָּרוֹת"]},
+            future: {ani: ["אֲדֻבַּר"], ata: ["תְּדֻבַּר"], at: ["תְּדֻבְּרִי"], hu: ["יְדֻבַּר"], hi: ["תְּדֻבַּר"], anachnu: ["נְדֻבַּר"], atem: ["תְּדֻבְּרוּ"], aten: ["תְּדֻבְּרוּ"], hem: ["יְדֻבְּרוּ"], hen: ["תְּדֻבַּרְנָה"]}},
+        {inf: "לְכֻבַּס", en: "to be laundered (Passive)",
+            past: {ani: ["כֻּבַּסְתִּי"], ata: ["כֻּבַּסְתָּ"], at: ["כֻּבַּסְתְּ"], hu: ["כֻּבַּס"], hi: ["כֻּבְּסָה"], anachnu: ["כֻּבַּסְנוּ"], atem: ["כֻּבַּסְתֶּם"], aten: ["כֻּבַּסְתֶּן"], hem: ["כֻּבְּסוּ"], hen: ["כֻּבְּסוּ"]},
+            present: {ani: ["מְכֻבָּס"], ata: ["מְכֻבָּס"], at: ["מְכֻבֶּסֶת"], hu: ["מְכֻבָּס"], hi: ["מְכֻבֶּסֶת"], anachnu: ["מְכֻבָּסִים"], atem: ["מְכֻבָּסִים"], aten: ["מְכֻבָּסוֹת"], hem: ["מְכֻבָּסִים"], hen: ["מְכֻבָּסוֹת"]},
+            future: {ani: ["אֲכֻבַּס"], ata: ["תְּכֻבַּס"], at: ["תְּכֻבְּסִי"], hu: ["יְכֻבַּס"], hi: ["תְּכֻבַּס"], anachnu: ["נְכֻבַּס"], atem: ["תְּכֻבְּסוּ"], aten: ["תְּכֻבְּסוּ"], hem: ["יְכֻבְּסוּ"], hen: ["תְּכֻבַּסְנָה"]}},
+        {inf: "לְסֻדַּר", en: "to be arranged (Passive)",
+            past: {ani: ["סֻדַּרְתִּי"], ata: ["סֻדַּרְתָּ"], at: ["סֻדַּרְתְּ"], hu: ["סֻדַּר"], hi: ["סֻדְּרָה"], anachnu: ["סֻדַּרְנוּ"], atem: ["סֻדַּרְתֶּם"], aten: ["סֻדַּרְתֶּן"], hem: ["סֻדְּרוּ"], hen: ["סֻדְּרוּ"]},
+            present: {ani: ["מְסֻדָּר"], ata: ["מְסֻדָּר"], at: ["מְסֻדֶּרֶת"], hu: ["מְסֻדָּר"], hi: ["מְסֻדֶּרֶת"], anachnu: ["מְסֻדָּרִים"], atem: ["מְסֻדָּרִים"], aten: ["מְסֻדָּרוֹת"], hem: ["מְסֻדָּרִים"], hen: ["מְסֻדָּרוֹת"]},
+            future: {ani: ["אֲסֻדַּר"], ata: ["תְּסֻדַּר"], at: ["תְּסֻדְּרִי"], hu: ["יְסֻדַּר"], hi: ["תְּסֻדַּר"], anachnu: ["נְסֻדַּר"], atem: ["תְּסֻדְּרוּ"], aten: ["תְּסֻדְּרוּ"], hem: ["יְסֻדְּרוּ"], hen: ["תְּסֻדַּרְנָה"]}},
+        {inf: "לְשֻׁלַּם", en: "to be paid (Passive)",
+            past: {ani: ["שֻׁלַּמְתִּי"], ata: ["שֻׁלַּמְתָּ"], at: ["שֻׁלַּמְתְּ"], hu: ["שֻׁלַּם"], hi: ["שֻׁלְּמָה"], anachnu: ["שֻׁלַּמְנוּ"], atem: ["שֻׁלַּמְתֶּם"], aten: ["שֻׁלַּמְתֶּן"], hem: ["שֻׁלְּמוּ"], hen: ["שֻׁלְּמוּ"]},
+            present: {ani: ["מְשֻׁלָּם"], ata: ["מְשֻׁלָּם"], at: ["מְשֻׁלֶּמֶת"], hu: ["מְשֻׁלָּם"], hi: ["מְשֻׁלֶּמֶת"], anachnu: ["מְשֻׁלָּמִים"], atem: ["מְשֻׁלָּמִים"], aten: ["מְשֻׁלָּמוֹת"], hem: ["מְשֻׁלָּמִים"], hen: ["מְשֻׁלָּמוֹת"]},
+            future: {ani: ["אֲשֻׁלַּם"], ata: ["תְּשֻׁלַּם"], at: ["תְּשֻׁלְּמִי"], hu: ["יְשֻׁלַּם"], hi: ["תְּשֻׁלַּם"], anachnu: ["נְשֻׁלַּם"], atem: ["תְּשֻׁלְּמוּ"], aten: ["תְּשֻׁלְּמוּ"], hem: ["יְשֻׁלְּמוּ"], hen: ["תְּשֻׁלַּמְנָה"]}},
+        {inf: "לְבֻקַּשׁ", en: "to be requested (Passive)",
+            past: {ani: ["בֻּקַּשְׁתִּי"], ata: ["בֻּקַּשְׁתָּ"], at: ["בֻּקַּשְׁתְּ"], hu: ["בֻּקַּשׁ"], hi: ["בֻּקְּשָׁה"], anachnu: ["בֻּקַּשְׁנוּ"], atem: ["בֻּקַּשְׁתֶּם"], aten: ["בֻּקַּשְׁתֶּן"], hem: ["בֻּקְּשׁוּ"], hen: ["בֻּקְּשׁוּ"]},
+            present: {ani: ["מְבֻקָּשׁ"], ata: ["מְבֻקָּשׁ"], at: ["מְבֻקֶּשֶׁת"], hu: ["מְבֻקָּשׁ"], hi: ["מְבֻקֶּשֶׁת"], anachnu: ["מְבֻקָּשִׁים"], atem: ["מְבֻקָּשִׁים"], aten: ["מְבֻקָּשׁוֹת"], hem: ["מְבֻקָּשִׁים"], hen: ["מְבֻקָּשׁוֹת"]},
+            future: {ani: ["אֲבֻקַּשׁ"], ata: ["תְּבֻקַּשׁ"], at: ["תְּבֻקְּשִׁי"], hu: ["יְבֻקַּשׁ"], hi: ["תְּבֻקַּשׁ"], anachnu: ["נְבֻקַּשׁ"], atem: ["תְּבֻקְּשׁוּ"], aten: ["תְּבֻקְּשׁוּ"], hem: ["יְבֻקְּשׁוּ"], hen: ["תְּבֻקַּשְׁנָה"]}},
+        {inf: "לְסֻפַּר", en: "to be told (Passive)",
+            past: {ani: ["סֻפַּרְתִּי"], ata: ["סֻפַּרְתָּ"], at: ["סֻפַּרְתְּ"], hu: ["סֻפַּר"], hi: ["סֻפְּרָה"], anachnu: ["סֻפַּרְנוּ"], atem: ["סֻפַּרְתֶּם"], aten: ["סֻפַּרְתֶּן"], hem: ["סֻפְּרוּ"], hen: ["סֻפְּרוּ"]},
+            present: {ani: ["מְסֻפָּר"], ata: ["מְסֻפָּר"], at: ["מְסֻפֶּרֶת"], hu: ["מְסֻפָּר"], hi: ["מְסֻפֶּרֶת"], anachnu: ["מְסֻפָּרִים"], atem: ["מְסֻפָּרִים"], aten: ["מְסֻפָּרוֹת"], hem: ["מְסֻפָּרִים"], hen: ["מְסֻפָּרוֹת"]},
+            future: {ani: ["אֲסֻפַּר"], ata: ["תְּסֻפַּר"], at: ["תְּסֻפְּרִי"], hu: ["יְסֻפַּר"], hi: ["תְּסֻפַּר"], anachnu: ["נְסֻפַּר"], atem: ["תְּסֻפְּרוּ"], aten: ["תְּסֻפְּרוּ"], hem: ["יְסֻפְּרוּ"], hen: ["תְּסֻפַּרְנָה"]}},
+        {inf: "לְקֻבַּל", en: "to be received (Passive)",
+            past: {ani: ["קֻבַּלְתִּי"], ata: ["קֻבַּלְתָּ"], at: ["קֻבַּלְתְּ"], hu: ["קֻבַּל"], hi: ["קֻבְּלָה"], anachnu: ["קֻבַּלְנוּ"], atem: ["קֻבַּלְתֶּם"], aten: ["קֻבַּלְתֶּן"], hem: ["קֻבְּלוּ"], hen: ["קֻבְּלוּ"]},
+            present: {ani: ["מְקֻבָּל"], ata: ["מְקֻבָּל"], at: ["מְקֻבֶּלֶת"], hu: ["מְקֻבָּל"], hi: ["מְקֻבֶּלֶת"], anachnu: ["מְקֻבָּלִים"], atem: ["מְקֻבָּלִים"], aten: ["מְקֻבָּלוֹת"], hem: ["מְקֻבָּלִים"], hen: ["מְקֻבָּלוֹת"]},
+            future: {ani: ["אֲקֻבַּל"], ata: ["תְּקֻבַּל"], at: ["תְּקֻבְּלִי"], hu: ["יְקֻבַּל"], hi: ["תְּקֻבַּל"], anachnu: ["נְקֻבַּל"], atem: ["תְּקֻבְּלוּ"], aten: ["תְּקֻבְּלוּ"], hem: ["יְקֻבְּלוּ"], hen: ["תְּקֻבַּלְנָה"]}},
+        {inf: "לְלֻמַּד", en: "to be taught (Passive)",
+            past: {ani: ["לֻמַּדְתִּי"], ata: ["לֻמַּדְתָּ"], at: ["לֻמַּדְתְּ"], hu: ["לֻמַּד"], hi: ["לֻמְּדָה"], anachnu: ["לֻמַּדְנוּ"], atem: ["לֻמַּדְתֶּם"], aten: ["לֻמַּדְתֶּן"], hem: ["לֻמְּדוּ"], hen: ["לֻמְּדוּ"]},
+            present: {ani: ["מְלֻמָּד"], ata: ["מְלֻמָּד"], at: ["מְלֻמֶּדֶת"], hu: ["מְלֻמָּד"], hi: ["מְלֻמֶּדֶת"], anachnu: ["מְלֻמָּדִים"], atem: ["מְלֻמָּדִים"], aten: ["מְלֻמָּדוֹת"], hem: ["מְלֻמָּדִים"], hen: ["מְלֻמָּדוֹת"]},
+            future: {ani: ["אֲלֻמַּד"], ata: ["תְּלֻמַּד"], at: ["תְּלֻמְּדִי"], hu: ["יְלֻמַּד"], hi: ["תְּלֻמַּד"], anachnu: ["נְלֻמַּד"], atem: ["תְּלֻמְּדוּ"], aten: ["תְּלֻמְּדוּ"], hem: ["יְלֻמְּדוּ"], hen: ["תְּלֻמַּדְנָה"]}},
+        {inf: "לְאֻשַׁר", en: "to be approved (Passive)",
+            past: {ani: ["אֻשַּׁרְתִּי"], ata: ["אֻשַּׁרְתָּ"], at: ["אֻשַּׁרְתְּ"], hu: ["אֻשַּׁר"], hi: ["אֻשְּׁרָה"], anachnu: ["אֻשַּׁרְנוּ"], atem: ["אֻשַּׁרְתֶּם"], aten: ["אֻשַּׁרְתֶּן"], hem: ["אֻשְּׁרוּ"], hen: ["אֻשְּׁרוּ"]},
+            present: {ani: ["מְאֻשָּׁר"], ata: ["מְאֻשָּׁר"], at: ["מְאֻשֶּׁרֶת"], hu: ["מְאֻשָּׁר"], hi: ["מְאֻשֶּׁרֶת"], anachnu: ["מְאֻשָּׁרִים"], atem: ["מְאֻשָּׁרִים"], aten: ["מְאֻשָּׁרוֹת"], hem: ["מְאֻשָּׁרִים"], hen: ["מְאֻשָּׁרוֹת"]},
+            future: {ani: ["אֲאֻשַּׁר"], ata: ["תְּאֻשַּׁר"], at: ["תְּאֻשְּׁרִי"], hu: ["יְאֻשַּׁר"], hi: ["תְּאֻשַּׁר"], anachnu: ["נְאֻשַּׁר"], atem: ["תְּאֻשְּׁרוּ"], aten: ["תְּאֻשְּׁרוּ"], hem: ["יְאֻשְּׁרוּ"], hen: ["תְּאֻשַּׁרְנָה"]}},
+        {inf: "לְבֻקַּר", en: "to be visited (Passive)",
+            past: {ani: ["בֻּקַּרְתִּי"], ata: ["בֻּקַּרְתָּ"], at: ["בֻּקַּרְתְּ"], hu: ["בֻּקַּר"], hi: ["בֻּקְּרָה"], anachnu: ["בֻּקַּרְנוּ"], atem: ["בֻּקַּרְתֶּם"], aten: ["בֻּקַּרְתֶּן"], hem: ["בֻּקְּרוּ"], hen: ["בֻּקְּרוּ"]},
+            present: {ani: ["מְבֻקָּר"], ata: ["מְבֻקָּר"], at: ["מְבֻקֶּרֶת"], hu: ["מְבֻקָּר"], hi: ["מְבֻקֶּרֶת"], anachnu: ["מְבֻקָּרִים"], atem: ["מְבֻקָּרִים"], aten: ["מְבֻקָּרוֹת"], hem: ["מְבֻקָּרִים"], hen: ["מְבֻקָּרוֹת"]},
+            future: {ani: ["אֲבֻקַּר"], ata: ["תְּבֻקַּר"], at: ["תְּבֻקְּרִי"], hu: ["יְבֻקַּר"], hi: ["תְּבֻקַּר"], anachnu: ["נְבֻקַּר"], atem: ["תְּבֻקְּרוּ"], aten: ["תְּבֻקְּרוּ"], hem: ["יְבֻקְּרוּ"], hen: ["תְּבֻקַּרְנָה"]}},
+        {inf: "לְתֻקַּן", en: "to be fixed (Passive)",
+            past: {ani: ["תֻּקַּנְתִּי"], ata: ["תֻּקַּנְתָּ"], at: ["תֻּקַּנְתְּ"], hu: ["תֻּקַּן"], hi: ["תֻּקְּנָה"], anachnu: ["תֻּקַּנּוּ"], atem: ["תֻּקַּנְתֶּם"], aten: ["תֻּקַּנְתֶּן"], hem: ["תֻּקְּנוּ"], hen: ["תֻּקְּנוּ"]},
+            present: {ani: ["מְתֻקָּן"], ata: ["מְתֻקָּן"], at: ["מְתֻקֶּנֶת"], hu: ["מְתֻקָּן"], hi: ["מְתֻקֶּנֶת"], anachnu: ["מְתֻקָּנִים"], atem: ["מְתֻקָּנִים"], aten: ["מְתֻקָּנוֹת"], hem: ["מְתֻקָּנִים"], hen: ["מְתֻקָּנוֹת"]},
+            future: {ani: ["אֲתֻקַּן"], ata: ["תְּתֻקַּן"], at: ["תְּתֻקְּנִי"], hu: ["יְתֻקַּן"], hi: ["תְּתֻקַּן"], anachnu: ["נְתֻקַּן"], atem: ["תְּתֻקְּנוּ"], aten: ["תְּתֻקְּנוּ"], hem: ["יְתֻקְּנוּ"], hen: ["תְּתֻקַּנָּה"]}},
+        {inf: "לְסֻיַּם", en: "to be finished (Passive)",
+            past: {ani: ["סֻיַּמְתִּי"], ata: ["סֻיַּמְתָּ"], at: ["סֻיַּמְתְּ"], hu: ["סֻיַּם"], hi: ["סֻיְּמָה"], anachnu: ["סֻיַּמְנוּ"], atem: ["סֻיַּמְתֶּם"], aten: ["סֻיַּמְתֶּן"], hem: ["סֻיְּמוּ"], hen: ["סֻיְּמוּ"]},
+            present: {ani: ["מְסֻיָּם"], ata: ["מְסֻיָּם"], at: ["מְסֻיֶּמֶת"], hu: ["מְסֻיָּם"], hi: ["מְסֻיֶּמֶת"], anachnu: ["מְסֻיָּמִים"], atem: ["מְסֻיָּמִים"], aten: ["מְסֻיָּמוֹת"], hem: ["מְסֻיָּמִים"], hen: ["מְסֻיָּמוֹת"]},
+            future: {ani: ["אֲסֻיַּם"], ata: ["תְּסֻיַּם"], at: ["תְּסֻיְּמִי"], hu: ["יְסֻיַּם"], hi: ["תְּסֻיַּם"], anachnu: ["נְסֻיַּם"], atem: ["תְּסֻיְּמוּ"], aten: ["תְּסֻיְּמוּ"], hem: ["יְסֻיְּמוּ"], hen: ["תְּסֻיַּמְנָה"]}},
+    ],
+    hufal: [
+        {inf: "לְהֻדְלַק", en: "to be turned on / lit (Passive)",
+            past: {ani: ["הֻדְלַקְתִּי"], ata: ["הֻדְלַקְתָּ"], at: ["הֻדְלַקְתְּ"], hu: ["הֻדְלַק"], hi: ["הֻדְלְקָה"], anachnu: ["הֻדְלַקְנוּ"], atem: ["הֻדְלַקְתֶּם"], aten: ["הֻדְלַקְתֶּן"], hem: ["הֻדְלְקוּ"], hen: ["הֻדְלְקוּ"]},
+            present: {ani: ["מֻדְלָק"], ata: ["מֻדְלָק"], at: ["מֻדְלֶקֶת"], hu: ["מֻדְלָק"], hi: ["מֻדְלֶקֶת"], anachnu: ["מֻדְלָקִים"], atem: ["מֻדְלָקִים"], aten: ["מֻדְלָקוֹת"], hem: ["מֻדְלָקִים"], hen: ["מֻדְלָקוֹת"]},
+            future: {ani: ["אֻדְלַק"], ata: ["תֻּדְלַק"], at: ["תֻּדְלְקִי"], hu: ["יֻדְלַק"], hi: ["תֻּדְלַק"], anachnu: ["נֻדְלַק"], atem: ["תֻּדְלְקוּ"], aten: ["תֻּדְלְקוּ"], hem: ["יֻדְלְקוּ"], hen: ["תֻּדְלַקְנָה"]}},
+        {inf: "לְהֻבְרַח", en: "to be smuggled (Passive)",
+            past: {ani: ["הֻבְרַחְתִּי"], ata: ["הֻבְרַחְתָּ"], at: ["הֻבְרַחְתְּ"], hu: ["הֻבְרַח"], hi: ["הֻבְרְחָה"], anachnu: ["הֻבְרַחְנוּ"], atem: ["הֻבְרַחְתֶּם"], aten: ["הֻבְרַחְתֶּן"], hem: ["הֻבְרְחוּ"], hen: ["הֻבְרְחוּ"]},
+            present: {ani: ["מֻבְרָח"], ata: ["מֻבְרָח"], at: ["מֻבְרַחַת"], hu: ["מֻבְרָח"], hi: ["מֻבְרַחַת"], anachnu: ["מֻבְרָחִים"], atem: ["מֻבְרָחִים"], aten: ["מֻבְרָחוֹת"], hem: ["מֻבְרָחִים"], hen: ["מֻבְרָחוֹת"]},
+            future: {ani: ["אֻבְרַח"], ata: ["תֻּבְרַח"], at: ["תֻּבְרְחִי"], hu: ["יֻבְרַח"], hi: ["תֻּבְרַח"], anachnu: ["נֻבְרַח"], atem: ["תֻּבְרְחוּ"], aten: ["תֻּבְרְחוּ"], hem: ["יֻבְרְחוּ"], hen: ["תֻּבְרַחְנָה"]}},
+        {inf: "לְהֻזְמַן", en: "to be ordered / invited (Passive)",
+            past: {ani: ["הֻזְמַנְתִּי"], ata: ["הֻזְמַנְתָּ"], at: ["הֻזְמַנְתְּ"], hu: ["הֻזְמַן"], hi: ["הֻזְמְנָה"], anachnu: ["הֻזְמַנּוּ"], atem: ["הֻזְמַנְתֶּם"], aten: ["הֻזְמַנְתֶּן"], hem: ["הֻזְמְנוּ"], hen: ["הֻזְמְנוּ"]},
+            present: {ani: ["מֻזְמָן"], ata: ["מֻזְמָן"], at: ["מֻזְמֶנֶת"], hu: ["מֻזְמָן"], hi: ["מֻזְמֶנֶת"], anachnu: ["מֻזְמָנִים"], atem: ["מֻזְמָנִים"], aten: ["מֻזְמָנוֹת"], hem: ["מֻזְמָנִים"], hen: ["מֻזְמָנוֹת"]},
+            future: {ani: ["אֻזְמַן"], ata: ["תֻּזְמַן"], at: ["תֻּזְמְנִי"], hu: ["יֻזְמַן"], hi: ["תֻּזְמַן"], anachnu: ["נֻזְמַן"], atem: ["תֻּזְמְנוּ"], aten: ["תֻּזְמְנוּ"], hem: ["יֻזְמְנוּ"], hen: ["תֻּזְמַנָּה"]}},
+        {inf: "לְהֻסְבַּר", en: "to be explained (Passive)",
+            past: {ani: ["הֻסְבַּרְתִּי"], ata: ["הֻסְבַּרְתָּ"], at: ["הֻסְבַּרְתְּ"], hu: ["הֻסְבַּר"], hi: ["הֻסְבְּרָה"], anachnu: ["הֻסְבַּרְנוּ"], atem: ["הֻסְבַּרְתֶּם"], aten: ["הֻסְבַּרְתֶּן"], hem: ["הֻסְבְּרוּ"], hen: ["הֻסְבְּרוּ"]},
+            present: {ani: ["מֻסְבָּר"], ata: ["מֻסְבָּר"], at: ["מֻסְבֶּרֶת"], hu: ["מֻסְבָּר"], hi: ["מֻסְבֶּרֶת"], anachnu: ["מֻסְבָּרִים"], atem: ["מֻסְבָּרִים"], aten: ["מֻסְבָּרוֹת"], hem: ["מֻסְבָּרִים"], hen: ["מֻסְבָּרוֹת"]},
+            future: {ani: ["אֻסְבַּר"], ata: ["תֻּסְבַּר"], at: ["תֻּסְבְּרִי"], hu: ["יֻסְבַּר"], hi: ["תֻּסְבַּר"], anachnu: ["נֻסְבַּר"], atem: ["תֻּסְבְּרוּ"], aten: ["תֻּסְבְּרוּ"], hem: ["יֻסְבְּרוּ"], hen: ["תֻּסְבַּרְנָה"]}},
+        {inf: "לְהֻתְחַל", en: "to be started (Passive)",
+            past: {ani: ["הֻתְחַלְתִּי"], ata: ["הֻתְחַלְתָּ"], at: ["הֻתְחַלְתְּ"], hu: ["הֻתְחַל"], hi: ["הֻתְחֲלָה"], anachnu: ["הֻתְחַלְנוּ"], atem: ["הֻתְחַלְתֶּם"], aten: ["הֻתְחַלְתֶּן"], hem: ["הֻתְחֲלוּ"], hen: ["הֻתְחֲלוּ"]},
+            present: {ani: ["מֻתְחָל"], ata: ["מֻתְחָל"], at: ["מֻתְחֶלֶת"], hu: ["מֻתְחָל"], hi: ["מֻתְחֶלֶת"], anachnu: ["מֻתְחָלִים"], atem: ["מֻתְחָלִים"], aten: ["מֻתְחָלוֹת"], hem: ["מֻתְחָלִים"], hen: ["מֻתְחָלוֹת"]},
+            future: {ani: ["אֻתְחַל"], ata: ["תֻּתְחַל"], at: ["תֻּתְחֲלִי"], hu: ["יֻתְחַל"], hi: ["תֻּתְחַל"], anachnu: ["נֻתְחַל"], atem: ["תֻּתְחֲלוּ"], aten: ["תֻּתְחֲלוּ"], hem: ["יֻתְחֲלוּ"], hen: ["תֻּתְחַלְנָה"]}},
+        {inf: "לְהֻפְסַק", en: "to be stopped (Passive)",
+            past: {ani: ["הֻפְסַקְתִּי"], ata: ["הֻפְסַקְתָּ"], at: ["הֻפְסַקְתְּ"], hu: ["הֻפְסַק"], hi: ["הֻפְסְקָה"], anachnu: ["הֻפְסַקְנוּ"], atem: ["הֻפְסַקְתֶּם"], aten: ["הֻפְסַקְתֶּן"], hem: ["הֻפְסְקוּ"], hen: ["הֻפְסְקוּ"]},
+            present: {ani: ["מֻפְסָק"], ata: ["מֻפְסָק"], at: ["מֻפְסֶקֶת"], hu: ["מֻפְסָק"], hi: ["מֻפְסֶקֶת"], anachnu: ["מֻפְסָקִים"], atem: ["מֻפְסָקִים"], aten: ["מֻפְסָקוֹת"], hem: ["מֻפְסָקִים"], hen: ["מֻפְסָקוֹת"]},
+            future: {ani: ["אֻפְסַק"], ata: ["תֻּפְסַק"], at: ["תֻּפְסְקִי"], hu: ["יֻפְסַק"], hi: ["תֻּפְסַק"], anachnu: ["נֻפְסַק"], atem: ["תֻּפְסְקוּ"], aten: ["תֻּפְסְקוּ"], hem: ["יֻפְסְקוּ"], hen: ["תֻּפְסַקְנָה"]}},
+        {inf: "לְהֻרְגַּשׁ", en: "to be felt (Passive)",
+            past: {ani: ["הֻרְגַּשְׁתִּי"], ata: ["הֻרְגַּשְׁתָּ"], at: ["הֻרְגַּשְׁתְּ"], hu: ["הֻרְגַּשׁ"], hi: ["הֻרְגְּשָׁה"], anachnu: ["הֻרְגַּשְׁנוּ"], atem: ["הֻרְגַּשְׁתֶּם"], aten: ["הֻרְגַּשְׁתֶּן"], hem: ["הֻרְגְּשׁוּ"], hen: ["הֻרְגְּשׁוּ"]},
+            present: {ani: ["מֻרְגָּשׁ"], ata: ["מֻרְגָּשׁ"], at: ["מֻרְגֶּשֶׁת"], hu: ["מֻרְגָּשׁ"], hi: ["מֻרְגֶּשֶׁת"], anachnu: ["מֻרְגָּשִׁים"], atem: ["מֻרְגָּשִׁים"], aten: ["מֻרְגָּשׁוֹת"], hem: ["מֻרְגָּשִׁים"], hen: ["מֻרְגָּשׁוֹת"]},
+            future: {ani: ["אֻרְגַּשׁ"], ata: ["תֻּרְגַּשׁ"], at: ["תֻּרְגְּשִׁי"], hu: ["יֻרְגַּשׁ"], hi: ["תֻּרְגַּשׁ"], anachnu: ["נֻרְגַּשׁ"], atem: ["תֻּרְגְּשׁוּ"], aten: ["תֻּרְגְּשׁוּ"], hem: ["יֻרְגְּשׁוּ"], hen: ["תֻּרְגַּשְׁנָה"]}},
+        {inf: "לְהֻכַן", en: "to be prepared (Passive)",
+            past: {ani: ["הוּכַנְתִּי", "הֻכַנְתִּי"], ata: ["הוּכַנְתָּ", "הֻכַנְתָּ"], at: ["הוּכַנְתְּ", "הֻכַנְתְּ"], hu: ["הוּכַן", "הֻכַן"], hi: ["הוּכְנָה", "הֻכְנָה"], anachnu: ["הוּכַנּוּ", "הֻכַנּוּ"], atem: ["הוּכַנְתֶּם", "הֻכַנְתֶּם"], aten: ["הוּכַנְתֶּן", "הֻכַנְתֶּן"], hem: ["הוּכְנוּ", "הֻכְנוּ"], hen: ["הוּכְנוּ", "הֻכְנוּ"]},
+            present: {ani: ["מוּכָן", "מֻכָן"], ata: ["מוּכָן", "מֻכָן"], at: ["מוּכָנָה", "מֻכָנָה"], hu: ["מוּכָן", "מֻכָן"], hi: ["מוּכָנָה", "מֻכָנָה"], anachnu: ["מוּכָנִים", "מֻכָנִים"], atem: ["מוּכָנִים", "מֻכָנִים"], aten: ["מוּכָנוֹת", "מֻכָנוֹת"], hem: ["מוּכָנִים", "מֻכָנִים"], hen: ["מוּכָנוֹת", "מֻכָנוֹת"]},
+            future: {ani: ["אוּכַן", "אֻכַן"], ata: ["תּוּכַן", "תֻּכַן"], at: ["תּוּכְנִי", "תֻּכְנִי"], hu: ["יוּכַן", "יֻכַן"], hi: ["תּוּכַן", "תֻּכַן"], anachnu: ["נוּכַן", "נֻכַן"], atem: ["תּוּכְנוּ", "תֻּכְנוּ"], aten: ["תּוּכְנוּ", "תֻּכְנוּ"], hem: ["יוּכְנוּ", "יֻכְנוּ"], hen: ["תּוּכַנָּה", "תֻּכַנָּה"]}},
+        {inf: "לְהֻמְלַץ", en: "to be recommended (Passive)",
+            past: {ani: ["הֻמְלַצְתִּי"], ata: ["הֻמְלַצְתָּ"], at: ["הֻמְלַצְתְּ"], hu: ["הֻמְלַץ"], hi: ["הֻמְלְצָה"], anachnu: ["הֻמְלַצְנוּ"], atem: ["הֻמְלַצְתֶּם"], aten: ["הֻמְלַצְתֶּן"], hem: ["הֻמְלְצוּ"], hen: ["הֻמְלְצוּ"]},
+            present: {ani: ["מֻמְלָץ"], ata: ["מֻמְלָץ"], at: ["מֻמְלֶצֶת"], hu: ["מֻמְלָץ"], hi: ["מֻמְלֶצֶת"], anachnu: ["מֻמְלָצִים"], atem: ["מֻמְלָצִים"], aten: ["מֻמְלָצוֹת"], hem: ["מֻמְלָצִים"], hen: ["מֻמְלָצוֹת"]},
+            future: {ani: ["אֻמְלַץ"], ata: ["תֻּמְלַץ"], at: ["תֻּמְלְצִי"], hu: ["יֻמְלַץ"], hi: ["תֻּמְלַץ"], anachnu: ["נֻמְלַץ"], atem: ["תֻּמְלְצוּ"], aten: ["תֻּמְלְצוּ"], hem: ["יֻמְלְצוּ"], hen: ["תֻּמְלַצְנָה"]}},
+        {inf: "לְהֻחְלַט", en: "to be decided (Passive)",
+            past: {ani: ["הֻחְלַטְתִּי"], ata: ["הֻחְלַטְתָּ"], at: ["הֻחְלַטְתְּ"], hu: ["הֻחְלַט"], hi: ["הֻחְלְטָה"], anachnu: ["הֻחְלַטְנוּ"], atem: ["הֻחְלַטְתֶּם"], aten: ["הֻחְלַטְתֶּן"], hem: ["הֻחְלְטוּ"], hen: ["הֻחְלְטוּ"]},
+            present: {ani: ["מֻחְלָט"], ata: ["מֻחְלָט"], at: ["מֻחְלֶטֶת"], hu: ["מֻחְלָט"], hi: ["מֻחְלֶטֶת"], anachnu: ["מֻחְלָטִים"], atem: ["מֻחְלָטִים"], aten: ["מֻחְלָטוֹת"], hem: ["מֻחְלָטִים"], hen: ["מֻחְלָטוֹת"]},
+            future: {ani: ["אֻחְלַט"], ata: ["תֻּחְלַט"], at: ["תֻּחְלְטִי"], hu: ["יֻחְלַט"], hi: ["תֻּחְלַט"], anachnu: ["נֻחְלַט"], atem: ["תֻּחְלְטוּ"], aten: ["תֻּחְלְטוּ"], hem: ["יֻחְלְטוּ"], hen: ["תֻּחְלַטְנָה"]}},
+        {inf: "לְהוּבָא", en: "to be brought (Passive)",
+            past: {ani: ["הוּבֵאתִי"], ata: ["הוּבֵאתָ"], at: ["הוּבֵאת"], hu: ["הוּבָא"], hi: ["הוּבְאָה"], anachnu: ["הוּבֵאנוּ"], atem: ["הוּבֵאתֶם"], aten: ["הוּבֵאתֶן"], hem: ["הוּבְאוּ"], hen: ["הוּבְאוּ"]},
+            present: {ani: ["מוּבָא"], ata: ["מוּבָא"], at: ["מוּבֵאת"], hu: ["מוּבָא"], hi: ["מוּבֵאת"], anachnu: ["מוּבָאִים"], atem: ["מוּבָאִים"], aten: ["מוּבָאוֹת"], hem: ["מוּבָאִים"], hen: ["מוּבָאוֹת"]},
+            future: {ani: ["אוּבָא"], ata: ["תּוּבָא"], at: ["תּוּבְאִי"], hu: ["יוּבָא"], hi: ["תּוּבָא"], anachnu: ["נוּבָא"], atem: ["תּוּבְאוּ"], aten: ["תּוּבְאוּ"], hem: ["יוּבְאוּ"], hen: ["תּוּבֶאנָה"]}},
+        {inf: "לְהוּבַן", en: "to be understood (Passive)",
+            past: {ani: ["הוּבַנְתִּי"], ata: ["הוּבַנְתָּ"], at: ["הוּבַנְתְּ"], hu: ["הוּבַן"], hi: ["הוּבְנָה"], anachnu: ["הוּבַנּוּ"], atem: ["הוּבַנְתֶּם"], aten: ["הוּבַנְתֶּן"], hem: ["הוּבְנוּ"], hen: ["הוּבְנוּ"]},
+            present: {ani: ["מוּבָן"], ata: ["מוּבָן"], at: ["מוּבֶנֶת"], hu: ["מוּבָן"], hi: ["מוּבֶנֶת"], anachnu: ["מוּבָנִים"], atem: ["מוּבָנִים"], aten: ["מוּבָנוֹת"], hem: ["מוּבָנִים"], hen: ["מוּבָנוֹת"]},
+            future: {ani: ["אוּבַן"], ata: ["תּוּבַן"], at: ["תּוּבְנִי"], hu: ["יוּבַן"], hi: ["תּוּבַן"], anachnu: ["נוּבַן"], atem: ["תּוּבְנוּ"], aten: ["תּוּבְנוּ"], hem: ["יוּבְנוּ"], hen: ["תּוּבַנָּה"]}},
+    ],
+    hitpael: [
+        {inf: "להתכתב", en: "to correspond / text",
+            past: {ani: ["התכתבתי"], ata: ["התכתבת"], at: ["התכתבת"], hu: ["התכתב"], hi: ["התכתבה"], anachnu: ["התכתבנו"], atem: ["התכתבתם"], aten: ["התכתבתן"], hem: ["התכתבו"], hen: ["התכתבו"]},
+            present: {ani: ["מתכתב"], ata: ["מתכתב"], at: ["מתכתבת"], hu: ["מתכתב"], hi: ["מתכתבת"], anachnu: ["מתכתבים"], atem: ["מתכתבים"], aten: ["מתכתבות"], hem: ["מתכתבים"], hen: ["מתכתבות"]},
+            future: {ani: ["אתכתב"], ata: ["תתכתב"], at: ["תתכתבי"], hu: ["יתכתב"], hi: ["תתכתב"], anachnu: ["נתכתב"], atem: ["תתכתבו"], aten: ["תתכתבו"], hem: ["יתכתבו"], hen: ["תתכתבנה"]}},
+        {inf: "להסתכל", en: "to look at",
+            past: {ani: ["הסתכלתי"], ata: ["הסתכלת"], at: ["הסתכלת"], hu: ["הסתכל"], hi: ["הסתכלה"], anachnu: ["הסתכלנו"], atem: ["הסתכלתם"], aten: ["הסתכלתן"], hem: ["הסתכלו"], hen: ["הסתכלו"]},
+            present: {ani: ["מסתכל"], ata: ["מסתכל"], at: ["מסתכלת"], hu: ["מסתכל"], hi: ["מסתכלת"], anachnu: ["מסתכלים"], atem: ["מסתכלים"], aten: ["מסתכלות"], hem: ["מסתכלים"], hen: ["מסתכלות"]},
+            future: {ani: ["אסתכל"], ata: ["תסתכל"], at: ["תסתכלי"], hu: ["יסתכל"], hi: ["תסתכל"], anachnu: ["נסתכל"], atem: ["תסתכלו"], aten: ["תסתכלו"], hem: ["יסתכלו"], hen: ["תסתכלנה"]}},
+        {inf: "להתלבש", en: "to get dressed",
+            past: {ani: ["התלבשתי"], ata: ["התלבשת"], at: ["התלבשת"], hu: ["התלבש"], hi: ["התלבשה"], anachnu: ["התלבשנו"], atem: ["התלבשתם"], aten: ["התלבשתן"], hem: ["התלבשו"], hen: ["התלבשו"]},
+            present: {ani: ["מתלבש"], ata: ["מתלבש"], at: ["מתלבשת"], hu: ["מתלבש"], hi: ["מתלבשת"], anachnu: ["מתלבשים"], atem: ["מתלבשים"], aten: ["מתלבשות"], hem: ["מתלבשים"], hen: ["מתלבשות"]},
+            future: {ani: ["אתלבש"], ata: ["תתלבש"], at: ["תתלבשי"], hu: ["יתלבש"], hi: ["תתלבש"], anachnu: ["נתלבש"], atem: ["תתלבשו"], aten: ["תתלבשו"], hem: ["יתלבשו"], hen: ["תתלבשנה"]}},
+        {inf: "להתפלל", en: "to pray",
+            past: {ani: ["התפללתי"], ata: ["התפללת"], at: ["התפללת"], hu: ["התפלל"], hi: ["התפללה"], anachnu: ["התפללנו"], atem: ["התפללתם"], aten: ["התפללתן"], hem: ["התפללו"], hen: ["התפללו"]},
+            present: {ani: ["מתפלל"], ata: ["מתפלל"], at: ["מתפללת"], hu: ["מתפלל"], hi: ["מתפללת"], anachnu: ["מתפללים"], atem: ["מתפללים"], aten: ["מתפללות"], hem: ["מתפללים"], hen: ["מתפללות"]},
+            future: {ani: ["אתפלל"], ata: ["תתפלל"], at: ["תתפללי"], hu: ["יתפלל"], hi: ["תתפלל"], anachnu: ["נתפלל"], atem: ["תתפללו"], aten: ["תתפללו"], hem: ["יתפללו"], hen: ["תתפללנה"]}},
+        {inf: "להתגעגע", en: "to miss (long for)",
+            past: {ani: ["התגעגעתי"], ata: ["התגעגעת"], at: ["התגעגעת"], hu: ["התגעגע"], hi: ["התגעגעה"], anachnu: ["התגעגענו"], atem: ["התגעגעתם"], aten: ["התגעגעתן"], hem: ["התגעגעו"], hen: ["התגעגעו"]},
+            present: {ani: ["מתגעגע"], ata: ["מתגעגע"], at: ["מתגעגעת"], hu: ["מתגעגע"], hi: ["מתגעגעת"], anachnu: ["מתגעגעים"], atem: ["מתגעגעים"], aten: ["מתגעגעות"], hem: ["מתגעגעים"], hen: ["מתגעגעות"]},
+            future: {ani: ["אתגעגע"], ata: ["תתגעגע"], at: ["תתגעגעי"], hu: ["יתגעגע"], hi: ["תתגעגע"], anachnu: ["נתגעגע"], atem: ["תתגעגעו"], aten: ["תתגעגעו"], hem: ["יתגעגעו"], hen: ["תתגעגענה"]}},
+        {inf: "להתרחץ", en: "to wash oneself",
+            past: {ani: ["התרחצתי"], ata: ["התרחצת"], at: ["התרחצת"], hu: ["התרחץ"], hi: ["התרחצה"], anachnu: ["התרחצנו"], atem: ["התרחצתם"], aten: ["התרחצתן"], hem: ["התרחצו"], hen: ["התרחצו"]},
+            present: {ani: ["מתרחץ"], ata: ["מתרחץ"], at: ["מתרחצת"], hu: ["מתרחץ"], hi: ["מתרחצת"], anachnu: ["מתרחצים"], atem: ["מתרחצים"], aten: ["מתרחצות"], hem: ["מתרחצים"], hen: ["מתרחצות"]},
+            future: {ani: ["אתרחץ"], ata: ["תתרחץ"], at: ["תתרחצי"], hu: ["יתרחץ"], hi: ["תתרחץ"], anachnu: ["נתרחץ"], atem: ["תתרחצו"], aten: ["תתרחצו"], hem: ["יתרחצו"], hen: ["תתרחצנה"]}},
+        {inf: "להשתמש", en: "to use",
+            past: {ani: ["השתמשתי"], ata: ["השתמשת"], at: ["השתמשת"], hu: ["השתמש"], hi: ["השתמשה"], anachnu: ["השתמשנו"], atem: ["השתמשתם"], aten: ["השתמשתן"], hem: ["השתמשו"], hen: ["השתמשו"]},
+            present: {ani: ["משתמש"], ata: ["משתמש"], at: ["משתמשת"], hu: ["משתמש"], hi: ["משתמשת"], anachnu: ["משתמשים"], atem: ["משתמשים"], aten: ["משתמשות"], hem: ["משתמשים"], hen: ["משתמשות"]},
+            future: {ani: ["אשתמש"], ata: ["תשתמש"], at: ["תשתמשי"], hu: ["ישתמש"], hi: ["תשתמש"], anachnu: ["נשתמש"], atem: ["תשתמשו"], aten: ["תשתמשו"], hem: ["ישתמשו"], hen: ["תשתמשנה"]}},
+        {inf: "להתקשר", en: "to call / contact",
+            past: {ani: ["התקשרתי"], ata: ["התקשרת"], at: ["התקשרת"], hu: ["התקשר"], hi: ["התקשרה"], anachnu: ["התקשרנו"], atem: ["התקשרתם"], aten: ["התקשרתן"], hem: ["התקשרו"], hen: ["התקשרו"]},
+            present: {ani: ["מתקשר"], ata: ["מתקשר"], at: ["מתקשרת"], hu: ["מתקשר"], hi: ["מתקשרת"], anachnu: ["מתקשרים"], atem: ["מתקשרים"], aten: ["מתקשרות"], hem: ["מתקשרים"], hen: ["מתקשרות"]},
+            future: {ani: ["אתקשר"], ata: ["תתקשר"], at: ["תתקשרי"], hu: ["יתקשר"], hi: ["תתקשר"], anachnu: ["נתקשר"], atem: ["תתקשרו"], aten: ["תתקשרו"], hem: ["יתקשרו"], hen: ["תתקשרנה"]}},
+        {inf: "להתנצל", en: "to apologize",
+            past: {ani: ["התנצלתי"], ata: ["התנצלת"], at: ["התנצלת"], hu: ["התנצל"], hi: ["התנצלה"], anachnu: ["התנצלנו"], atem: ["התנצלתם"], aten: ["התנצלתן"], hem: ["התנצלו"], hen: ["התנצלו"]},
+            present: {ani: ["מתנצל"], ata: ["מתנצל"], at: ["מתנצלת"], hu: ["מתנצל"], hi: ["מתנצלת"], anachnu: ["מתנצלים"], atem: ["מתנצלים"], aten: ["מתנצלות"], hem: ["מתנצלים"], hen: ["מתנצלות"]},
+            future: {ani: ["אתנצל"], ata: ["תתנצל"], at: ["תתנצלי"], hu: ["יתנצל"], hi: ["תתנצל"], anachnu: ["נתנצל"], atem: ["תתנצלו"], aten: ["תתנצלו"], hem: ["יתנצלו"], hen: ["תתנצלנה"]}},
+        {inf: "להצטער", en: "to be sorry",
+            past: {ani: ["הצטערתי"], ata: ["הצטערת"], at: ["הצטערת"], hu: ["הצטער"], hi: ["הצטערה"], anachnu: ["הצטערנו"], atem: ["הצטערתם"], aten: ["הצטערתן"], hem: ["הצטערו"], hen: ["הצטערו"]},
+            present: {ani: ["מצטער"], ata: ["מצטער"], at: ["מצטערת"], hu: ["מצטער"], hi: ["מצטערת"], anachnu: ["מצטערים"], atem: ["מצטערים"], aten: ["מצטערות"], hem: ["מצטערים"], hen: ["מצטערות"]},
+            future: {ani: ["אצטער"], ata: ["תצטער"], at: ["תצטערי"], hu: ["יצטער"], hi: ["תצטער"], anachnu: ["נצטער"], atem: ["תצטערו"], aten: ["תצטערו"], hem: ["יצטערו"], hen: ["תצטערנה"]}},
+        {inf: "להתעורר", en: "to wake up",
+            past: {ani: ["התעוררתי"], ata: ["התעוררת"], at: ["התעוררת"], hu: ["התעורר"], hi: ["התעוררה"], anachnu: ["התעוררנו"], atem: ["התעוררתם"], aten: ["התעוררתן"], hem: ["התעוררו"], hen: ["התעוררו"]},
+            present: {ani: ["מתעורר"], ata: ["מתעורר"], at: ["מתעוררת"], hu: ["מתעורר"], hi: ["מתעוררת"], anachnu: ["מתעוררים"], atem: ["מתעוררים"], aten: ["מתעוררות"], hem: ["מתעוררים"], hen: ["מתעוררות"]},
+            future: {ani: ["אתעורר"], ata: ["תתעורר"], at: ["תתעוררי"], hu: ["יתעורר"], hi: ["תתעורר"], anachnu: ["נתעורר"], atem: ["תתעוררו"], aten: ["תתעוררו"], hem: ["יתעוררו"], hen: ["תתעוררנה"]}},
+        {inf: "להתקדם", en: "to advance / make progress",
+            past: {ani: ["התקדמתי"], ata: ["התקדמת"], at: ["התקדמת"], hu: ["התקדם"], hi: ["התקדמה"], anachnu: ["התקדמנו"], atem: ["התקדמתם"], aten: ["התקדמתן"], hem: ["התקדמו"], hen: ["התקדמו"]},
+            present: {ani: ["מתקדם"], ata: ["מתקדם"], at: ["מתקדמת"], hu: ["מתקדם"], hi: ["מתקדמת"], anachnu: ["מתקדמים"], atem: ["מתקדמים"], aten: ["מתקדמות"], hem: ["מתקדמים"], hen: ["מתקדמות"]},
+            future: {ani: ["אתקדם"], ata: ["תתקדם"], at: ["תתקדמי"], hu: ["יתקדם"], hi: ["תתקדם"], anachnu: ["נתקדם"], atem: ["תתקדמו"], aten: ["תתקדמו"], hem: ["יתקדמו"], hen: ["תתקדמנה"]}},
+        {inf: "להשתנות", en: "to change (oneself)",
+            past: {ani: ["השתניתי"], ata: ["השתנית"], at: ["השתנית"], hu: ["השתנה"], hi: ["השתנתה"], anachnu: ["השתנינו"], atem: ["השתניתם"], aten: ["השתניתן"], hem: ["השתנו"], hen: ["השתנו"]},
+            present: {ani: ["משתנה"], ata: ["משתנה"], at: ["משתנה"], hu: ["משתנה"], hi: ["משתנה"], anachnu: ["משתנים"], atem: ["משתנים"], aten: ["משתנות"], hem: ["משתנים"], hen: ["משתנות"]},
+            future: {ani: ["אשתנה"], ata: ["תשתנה"], at: ["תשתני"], hu: ["ישתנה"], hi: ["תשתנה"], anachnu: ["נשתנה"], atem: ["תשתנו"], aten: ["תשתנו"], hem: ["ישתנו"], hen: ["תשתנינה"]}},
+        {inf: "להתאהב", en: "to fall in love",
+            past: {ani: ["התאהבתי"], ata: ["התאהבת"], at: ["התאהבת"], hu: ["התאהב"], hi: ["התאהבה"], anachnu: ["התאהבנו"], atem: ["התאהבתם"], aten: ["התאהבתן"], hem: ["התאהבו"], hen: ["התאהבו"]},
+            present: {ani: ["מתאהב"], ata: ["מתאהב"], at: ["מתאהבת"], hu: ["מתאהב"], hi: ["מתאהבת"], anachnu: ["מתאהבים"], atem: ["מתאהבים"], aten: ["מתאהבות"], hem: ["מתאהבים"], hen: ["מתאהבות"]},
+            future: {ani: ["אתאהב"], ata: ["תתאהב"], at: ["תתאהבי"], hu: ["יתאהב"], hi: ["תתאהב"], anachnu: ["נתאהב"], atem: ["תתאהבו"], aten: ["תתאהבו"], hem: ["יתאהבו"], hen: ["תתאהבנה"]}},
+        {inf: "להסתדר", en: "to manage / get by",
+            past: {ani: ["הסתדרתי"], ata: ["הסתדרת"], at: ["הסתדרת"], hu: ["הסתדר"], hi: ["הסתדרה"], anachnu: ["הסתדרנו"], atem: ["הסתדרתם"], aten: ["הסתדרתן"], hem: ["הסתדרו"], hen: ["הסתדרו"]},
+            present: {ani: ["מסתדר"], ata: ["מסתדר"], at: ["מסתדרת"], hu: ["מסתדר"], hi: ["מסתדרת"], anachnu: ["מסתדרים"], atem: ["מסתדרים"], aten: ["מסתדרות"], hem: ["מסתדרים"], hen: ["מסתדרות"]},
+            future: {ani: ["אסתדר"], ata: ["תסתדר"], at: ["תסתדרי"], hu: ["יסתדר"], hi: ["תסתדר"], anachnu: ["נסתדר"], atem: ["תסתדרו"], aten: ["תסתדרו"], hem: ["יסתדרו"], hen: ["תסתדרנה"]}},
+    ]
+};
+
+const pronouns = {
+    ani:"אני (I)", ata:"אתה (you m.sg)", at:"את (you f.sg)", hu:"הוא (he)", hi:"היא (she)", anachnu:"אנחנו (we)", atem:"אתם (you m.pl)", aten:"אתן (you f.pl)", hem:"הם (they m)", hen:"הן (they f)"
+};
+
+let enabledBinyanim = ["paal","nifal","piel","pual","hifil","hufal","hitpael"];
+let current=null; 
+let total=0;
+let correct=0;
+let attempted=0;
+let streak=0;
+let maxStreak = 0;
+let tries=0;
+let maxQuestions=0;
+let timeLeft=300;
+let timerId=null;
+let unlimitedTime=false;
+let unlimitedQuestions=false;
+let currentTense='past';
+let incorrectAttempts = [];
+
+const display=(id)=>document.getElementById(id);
+const answerInput=display('answerInput'),resultArea=display('resultArea'),scoreDisplay=display('scoreDisplay'),
+countDisp=display('countDisp'),infinitiveDisplay=display('infinitiveDisplay'),pronounDisplay=display('pronounDisplay'),
+instructionDisplay=display('instruction'),endGameBtn=display('endGameBtn'), gameContent=display('gameContent'),
+startupMenu=display('startupMenu'), gameTip=display('gameTip'), infinitiveTooltip = display('infinitiveTooltip');
+
+
+function updateBinyanText(){
+    const cbs=[...document.querySelectorAll('.binyanCheckbox')].filter(c=>c.checked);
+    enabledBinyanim=cbs.map(c=>c.value);
+    display('binyanList').textContent=cbs.map(c=>c.parentNode.textContent.trim()).join(' • ');
+    if (enabledBinyanim.length === 0) {
+        gameTip.textContent = '❗ Select at least one Binyan.';
+        gameTip.style.color = 'crimson';
+    } else {
+        gameTip.textContent = 'Select settings, then click Start.';
+        gameTip.style.color = '#6b7280';
+    }
+}
+document.querySelectorAll('.binyanCheckbox').forEach(cb=>cb.addEventListener('change',updateBinyanText)); 
+updateBinyanText(); // Initialize on load
+
+function formatTime(s){
+    if (s === 0) return '∞'; // Unlimited time display
+    const m=Math.floor(s/60),sec=s%60;
+    return `${m}:${sec<10?'0'+sec:sec}`
+}
+
+function toggleGameView(showGame) {
+    startupMenu.style.display = showGame ? 'none' : 'block';
+    gameContent.style.display = showGame ? 'block' : 'none';
+    endGameBtn.style.display = showGame ? 'block' : 'none';
+    
+    // Add/remove class to body to indicate game state for CSS
+    document.body.classList.toggle('game-active', showGame);
+
+    if (!showGame) {
+         infinitiveDisplay.textContent = '—';
+         pronounDisplay.textContent = '—';
+         infinitiveTooltip.textContent = ''; // Clear tooltip
+         gameTip.textContent = 'Select settings, then click Start.';
+         gameTip.style.color = '#6b7280';
+    } else {
+        gameTip.textContent = 'Keep practicing!';
+        gameTip.style.color = '#6b7280';
+    }
+}
+toggleGameView(false); // Hide game content and show startup menu on load
+
+function restartGame() {
+    // Reset all state variables
+    current = null; total = 0; correct = 0; attempted = 0; streak = 0; maxStreak = 0; tries = 0; maxQuestions = 0;
+    incorrectAttempts = [];
+
+    // Reset UI elements
+    display('gameOverModalOverlay').classList.remove('active');
+    answerInput.value = '';
+    resultArea.textContent = '';
+    scoreDisplay.textContent = '0%';
+    countDisp.textContent = '0 / 0';
+    display('correctStreak').textContent = 0;
+    
+    // Reset timer display immediately before startGame()
+    timeLeft=parseInt(display('timeSelect').value,10);
+    display('timerDisplay').textContent = formatTime(timeLeft); 
+
+    toggleGameView(false); // Show startup menu again
+    if (timerId) clearInterval(timerId); // Clear any running timer
+}
+display('restartBtn').addEventListener('click', restartGame);
+
+function pickQuestion(){
+    const bins=enabledBinyanim.filter(b=>DATA[b] && DATA[b].length > 0);
+    if(!bins.length) return null;
+    
+    let availableQuestions = [];
+    bins.forEach(bin => {
+        DATA[bin].forEach(verb => {
+            const pronKeys = Object.keys(pronouns);
+            pronKeys.forEach(p => {
+                const forms = verb[currentTense];
+                // Check if the tense has the pronoun key AND if the value is an array (our new structure)
+                if (forms && Array.isArray(forms[p]) && forms[p].length > 0) {
+                    // Add the english translation to the question object
+                    availableQuestions.push({ binyan: bin, verb: verb, pronoun: p });
+                }
+            });
+        });
+    });
+
+    if (availableQuestions.length === 0) return null;
+    
+    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+    return availableQuestions[randomIndex];
+}
+
+function startGame(){
+    if(enabledBinyanim.length===0){
+        gameTip.textContent = '❗ Please select at least one Binyan before starting.';
+        gameTip.style.color = 'crimson';
+        return;
+    }
+
+    if(timerId) clearInterval(timerId);
+    
+    timeLeft=parseInt(display('timeSelect').value,10);
+    maxQuestions=parseInt(display('qCount').value,10);
+    currentTense=display('tenseSelect').value; 
+    unlimitedTime=(timeLeft===0); // Set unlimitedTime flag
+    unlimitedQuestions=(maxQuestions===0); // Set unlimitedQuestions flag
+    
+    // Reset scores for a new game
+    total=0;correct=0;attempted=0;streak=0; maxStreak = 0; incorrectAttempts = [];
+
+    instructionDisplay.innerHTML=`Write the verb in <b>${currentTense} tense</b> for the given pronoun.`;
+    
+    toggleGameView(true); // Show game content
+    
+    nextQuestion();
+    answerInput.disabled=false; 
+    answerInput.focus();
+
+    // Start Timer if not unlimited
+    if(!unlimitedTime){
+        display('timerDisplay').textContent=formatTime(timeLeft);
+        timerId=setInterval(()=>{
+            timeLeft--;
+            display('timerDisplay').textContent=formatTime(timeLeft);
+            if(timeLeft<=0) endGame();
+        },1000);
+    } else {
+        display('timerDisplay').textContent = formatTime(0); // Display ∞
+        timerId = null;
+    }
+}
+
+function endGame(){
+    if(timerId) clearInterval(timerId);
+    answerInput.disabled=true;
+    current = null;
+    infinitiveTooltip.textContent = ''; // Clear tooltip
+    toggleGameView(false); // Hide game content and show startup menu
+    showGameOverModal();
+}
+
+endGameBtn.addEventListener('click', endGame);
+display('startGameFromMenuBtn').addEventListener('click', startGame);
+
+
+function showGameOverModal() {
+    const totalQuestions = attempted;
+    const accuracy = Math.round((correct / (totalQuestions || 1)) * 100);
+    const modal = display('gameOverModalOverlay');
+
+    display('finalAccuracy').innerHTML = `${accuracy}% <span>(${correct}/${totalQuestions})</span>`;
+    display('finalCorrect').textContent = correct;
+    display('finalIncorrect').textContent = totalQuestions - correct;
+    display('finalStreak').textContent = maxStreak;
+
+    // Update message based on performance
+    let finalMsg = '';
+    if (accuracy === 100 && totalQuestions > 0) {
+        finalMsg = 'Unbelievable work! A perfect score!';
+    } else if (accuracy >= 80) {
+        finalMsg = 'Excellent job! You demonstrated strong knowledge.';
+    } else {
+        finalMsg = 'Keep practicing! Review your incorrect answers below.';
+    }
+    display('finalMsg').textContent = finalMsg;
+
+    const errorList = display('errorList');
+    errorList.innerHTML = '';
+    
+    if (incorrectAttempts.length > 0) {
+        display('errorListHeader').textContent = `Reviewing ${incorrectAttempts.length} Incorrect Attempts:`;
+        incorrectAttempts.forEach(err => {
+            const li = document.createElement('div');
+            li.className = 'error-item';
+            // Use the pronoun translation
+            const pronText = pronouns[err.pronoun];
+            // Display all accepted answers, joined by ' / '
+            const correctAnswers = err.acceptedAnswers.join(' / '); 
+
+            li.innerHTML = `
+                <span>${err.binyan.charAt(0).toUpperCase() + err.binyan.slice(1)} • ${err.tense.charAt(0).toUpperCase() + err.tense.slice(1)}</span>
+                <strong>${err.infinitive} (${err.en})</strong> for ${pronText} <br> 
+                **Correct Answer(s):** <strong>${correctAnswers}</strong>
+            `;
+            errorList.appendChild(li);
+        });
+    } else {
+        display('errorListHeader').textContent = 'Perfect score! You made no incorrect attempts.';
+        display('errorList').textContent = '';
+    }
+
+    modal.classList.add('active');
+}
+
+// 1. UPDATED NORMALIZE FUNCTION (Ignores Nikud and related marks)
+function normalize(s){
+    // 1. Remove non-standard spacing and trim
+    let normalized = s.replace(/\s+/g,'').trim();
+    // 2. Remove Niqqud/Dagesh/Shin/Sin dots (Common Nikud Unicode Range)
+    // The pattern removes marks like PATAH, KAMATS, SHVA, HOLAM, etc.
+    normalized = normalized.replace(/[\u0591-\u05BD\u05BF-\u05C5\u05C7]/g, ''); 
+    return normalized;
+}
+
+function nextQuestion(){
+    if(!unlimitedQuestions && attempted>=maxQuestions){endGame();return;}
+    current=pickQuestion(); 
+    if(!current){
+        resultArea.textContent='Please select binyanim that have conjugation data for the selected tense.';
+        resultArea.style.color='crimson';
+        answerInput.disabled=true;
+        infinitiveTooltip.textContent = ''; // Clear tooltip
+        return;
+    }
+    infinitiveDisplay.textContent=`${current.verb.inf} — ${current.binyan.charAt(0).toUpperCase() + current.binyan.slice(1)}`;
+    infinitiveTooltip.textContent = current.verb.en; // Set tooltip text
+    pronounDisplay.textContent=`${pronouns[current.pronoun]}`;
+    tries=0;
+    answerInput.value=''; answerInput.focus();
+    resultArea.textContent='';
+}
+
+display('checkBtn').addEventListener('click',()=>{
+    if(!current || answerInput.disabled) return;
+    const user=normalize(answerInput.value);
+    
+    // correctForms is now an array of acceptable spellings
+    const acceptedForms = current.verb[currentTense] ? current.verb[currentTense][current.pronoun] : null;
+
+    if(!acceptedForms || !Array.isArray(acceptedForms) || acceptedForms.length === 0){
+        resultArea.textContent='Error: Tense/Pronoun not found in data for this verb.';
+        resultArea.style.color='crimson';
+        return;
+    }
+    
+    if (tries === 0) {
+        attempted++;
+    }
+
+    // Check if the user's normalized input matches ANY of the normalized accepted forms
+    const isCorrect = acceptedForms.some(form => user === normalize(form));
+    
+    if(isCorrect){
+        correct++; 
+        streak++; 
+        maxStreak = Math.max(maxStreak, streak); // Update max streak
+
+        // Display the primary/first accepted form
+        resultArea.textContent=`✅ Correct! The answer was: ${acceptedForms[0]}`; 
+        resultArea.style.color='green'; 
+        setTimeout(nextQuestion,900);
+    } else {
+        tries++;
+        
+        // Log incorrect attempt only on the first failed try for a question
+        if (tries === 1) { 
+             incorrectAttempts.push({
+                infinitive: current.verb.inf,
+                binyan: current.binyan,
+                pronoun: current.pronoun,
+                tense: currentTense,
+                en: current.verb.en, // Add english to the error log
+                acceptedAnswers: acceptedForms,
+            });
+        }
+
+        if(tries<3){
+            resultArea.textContent=`❌ Try again (${tries}/3)`; 
+            resultArea.style.color='crimson';
+        } else {
+            // Display all accepted forms
+            resultArea.textContent=`❌ The correct form(s) were: ${acceptedForms.join(' / ')}`; 
+            resultArea.style.color='crimson'; 
+            setTimeout(nextQuestion,1200);
+        }
+        streak=0;
+    }
+    
+    display('correctStreak').textContent=streak;
+    scoreDisplay.textContent=Math.round((correct/attempted)*100)+'%';
+    countDisp.textContent=`${correct} / ${attempted}`;
+});
+
+display('skipBtn').addEventListener('click',()=>{
+    if(!current) return;
+    const acceptedForms = current.verb[currentTense] ? current.verb[currentTense][current.pronoun] : null;
+    const primaryForm = acceptedForms && acceptedForms.length > 0 ? acceptedForms[0] : '—';
+    const allForms = acceptedForms ? acceptedForms.join(' / ') : '—';
+
+
+    // Log the skip as an incorrect attempt to show in the summary
+    if (tries === 0) {
+        attempted++;
+        incorrectAttempts.push({
+            infinitive: current.verb.inf,
+            binyan: current.binyan,
+            pronoun: current.pronoun,
+            tense: currentTense,
+            acceptedAnswers: acceptedForms,
+        });
+    }
+
+    resultArea.textContent=`Skipped — The answer was: ${allForms}`;
+    resultArea.style.color='#c64213';
+    setTimeout(nextQuestion,1200);
+    
+    streak=0;
+    display('correctStreak').textContent=0;
+    scoreDisplay.textContent=Math.round((correct/attempted)*100)+'%';
+    countDisp.textContent=`${correct} / ${attempted}`;
+});
+
+
+display('showHint').addEventListener('click',()=>{
+    if(!current || answerInput.disabled){resultArea.textContent='No question yet.';return;}
+    const acceptedForms = current.verb[currentTense] ? current.verb[currentTense][current.pronoun] : null;
+    const primaryForm = acceptedForms && acceptedForms.length > 0 ? acceptedForms[0] : '';
+    
+    if (primaryForm.length > 2) {
+      resultArea.textContent=`Hint: starts with "${primaryForm.slice(0,2)}..."`;
+    } else if (primaryForm) {
+      resultArea.textContent=`Hint: The word is very short!`;
+    } else {
+      resultArea.textContent='Error: Cannot provide hint.';
+    }
+    
+    resultArea.style.color='#0b76d1';
+});
+
+answerInput.addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();display('checkBtn').click();}});
+
+</script>
+</body>
+</html>
+
+
